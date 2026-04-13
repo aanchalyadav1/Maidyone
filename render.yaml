@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: maidyone-backend
+    env: node
+    buildCommand: "cd backend && npm install && npm run build"
+    startCommand: "cd backend && npm start"
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 5000
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: maidyone-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: maidyone-frontend
+    env: static
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: "./frontend/dist"
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: maidyone-backend
+          envVarKey: RENDER_EXTERNAL_URL
