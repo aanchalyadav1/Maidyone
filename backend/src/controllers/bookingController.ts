@@ -82,15 +82,19 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
   try {
     // Generate unique booking ID
     const bookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Ensure frontend doesn't override critical defaults:
+    const { status, date, user, ...allowedPayload } = req.body;
+    
     const newBooking = new Booking({
-      ...req.body,
+      ...allowedPayload,
       bookingId,
-      user: (req as any).user.uid // Assuming authMiddleware maps internal ObjectId to user.uid
+      date: new Date(), // Enforce Server-time
+      status: 'Pending', // Enforce default
+      user: (req as any).user._id // Automatically extracted from token/middleware
     });
 
     const savedBooking = await newBooking.save();
-    
-    // Trigger notification here optionally
     
     sendResponse(res, 201, true, 'Booking created successfully', savedBooking);
   } catch (error) {

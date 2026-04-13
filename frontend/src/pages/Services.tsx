@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
-import { Search, Loader2, Plus, Edit, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { TableSkeleton } from '../components/common/Skeleton';
+import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 
 interface ServiceData {
   _id: string;
@@ -95,7 +96,7 @@ export const Services = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <div className="py-2"><TableSkeleton columns={5} rows={5} /></div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 text-red-500">{error}</div>
         ) : services.length === 0 ? (
@@ -115,8 +116,8 @@ export const Services = () => {
               <tbody>
                 {services.map((s) => (
                   <tr key={s._id} className={`border-b border-gray-50 text-sm transition-colors ${!s.isActive ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50/50'}`}>
-                    <td className="py-4 px-4 font-medium">{s.name}</td>
-                    <td className="py-4 px-4">{s.category}</td>
+                    <td className="py-4 px-4 font-medium text-gray-800">{s.name}</td>
+                    <td className="py-4 px-4 text-gray-500 font-medium">{s.category}</td>
                     <td className="py-4 px-4">₹{s.basePrice}</td>
                     <td className="py-4 px-4">
                        <span className={`px-2 py-1 rounded-full text-xs ${s.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>

@@ -30,15 +30,12 @@ const navItems = [
 
 export const Sidebar = () => {
   return (
-    <aside className="fixed left-4 top-4 bottom-4 w-64 bg-gradient-to-b from-[#1FA2A6] via-[#A6FFCB]/20 to-[#1FA2A6] rounded-3xl flex flex-col justify-between overflow-hidden shadow-2xl z-20">
-      {/* Decorative colored blobs behind content */}
-      <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#F9D423]/20 rounded-full blur-3xl rounded-full"></div>
-      
-      <div className="relative z-10 p-6 pt-8 overflow-y-auto custom-scrollbar">
+    <aside className="w-full h-full bg-gradient-to-b from-[#0EA5A4] via-[#6CC8C6] to-[#E9D060] rounded-[32px] flex flex-col justify-between overflow-hidden relative shadow-lg">
+      <div className="relative z-10 p-6 pt-8 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="flex flex-col items-center mb-8">
-          <img src="https://i.pravatar.cc/150?img=11" alt="Profile" className="w-20 h-20 rounded-full border-4 border-white mb-2 shadow-lg" />
-          <h2 className="text-white font-semibold text-lg">Mr. Raj</h2>
-          <p className="text-white/70 text-sm">Real.raj@gmail.com</p>
+          <img src="https://i.pravatar.cc/150?img=11" alt="Profile" className="w-[72px] h-[72px] rounded-full border-[3px] border-white mb-3 shadow-md" />
+          <h2 className="text-white font-bold text-[17px]">Mr. Raj</h2>
+          <p className="text-white/80 text-xs">Email.raj@gmail.com</p>
         </div>
 
         <nav className="flex flex-col gap-2">
@@ -48,24 +45,23 @@ export const Sidebar = () => {
               to={item.path}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 text-sm font-medium',
+                  'flex items-center gap-3 px-4 py-[10px] rounded-[18px] transition-all duration-200 text-[13px] font-semibold',
                   isActive 
-                    ? 'bg-white/20 text-white shadow-sm border border-white/10' 
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/25 text-white shadow-sm ring-1 ring-white/10' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                 )
               }
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-4 h-4" />
               {item.name}
             </NavLink>
           ))}
         </nav>
       </div>
 
-      <div className="relative z-10 p-6">
-        <button className="flex items-center justify-center w-full gap-2 px-4 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-colors shadow-lg">
-          <LogOut className="w-4 h-4" />
-          <span className="font-medium text-sm">Log Out</span>
+      <div className="relative z-10 p-6 pt-2 pb-8">
+        <button className="flex items-center justify-center w-[120px] mx-auto gap-2 px-4 py-3 bg-[#000000] text-white rounded-full hover:bg-black/80 transition-colors shadow-lg">
+          <span className="font-bold text-[13px]">Log Out</span>
         </button>
       </div>
     </aside>

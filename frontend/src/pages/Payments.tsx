@@ -3,6 +3,7 @@ import api from '../services/api';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { TableSkeleton } from '../components/common/Skeleton';
 
 interface PaymentData {
   _id: string;
@@ -66,7 +67,7 @@ export const Payments = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <div className="py-2"><TableSkeleton columns={7} rows={6} /></div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 text-red-500">{error}</div>
         ) : payments.length === 0 ? (
@@ -93,7 +94,7 @@ export const Payments = () => {
                     <td className="py-4 px-4">{p.user?.name || 'Unknown'}</td>
                     <td className="py-4 px-4 text-primary">#{p.booking?.bookingId}</td>
                     <td className="py-4 px-4 font-bold">₹{p.amount.toLocaleString()}</td>
-                    <td className="py-4 px-4 text-gray-500">{p.method}</td>
+                    <td className="py-4 px-4 text-gray-500 font-medium">{p.method}</td>
                     <td className="py-4 px-4"><StatusBadge status={p.status} /></td>
                   </tr>
                 ))}

@@ -5,6 +5,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 
 import { Dashboard } from './pages/Dashboard';
 import { Bookings } from './pages/Bookings';
+import { BookingDetails } from './pages/BookingDetails';
 import { Users } from './pages/Users';
 import { Workers } from './pages/Workers';
 import { Services } from './pages/Services';
@@ -12,9 +13,10 @@ import { Payments } from './pages/Payments';
 import { Tickets } from './pages/Tickets';
 import { Notifications } from './pages/Notifications';
 import { Login } from './pages/Login';
-
-// Placeholder empty components for routes
-const Settings = () => <div>Settings</div>;
+import { OperationsBoard } from './pages/OperationsBoard';
+import { AssignWorker } from './pages/AssignWorker';
+import { Settings } from './pages/Settings';
+import { Verification } from './pages/Verification';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -33,12 +35,15 @@ function App() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="bookings" element={<Bookings />} />
+        <Route path="bookings/details/:id" element={<BookingDetails />} />
         <Route path="users" element={<Users />} />
         <Route path="workers" element={<Workers />} />
         <Route path="payments" element={<Payments />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="verification" element={<div>Verification</div>} />
+        <Route path="verification" element={<Verification />} />
         <Route path="tickets" element={<Tickets />} />
+        <Route path="operations-board" element={<OperationsBoard />} />
+        <Route path="bookings/assign/:id" element={<AssignWorker />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="services" element={<Services />} />
       </Route>

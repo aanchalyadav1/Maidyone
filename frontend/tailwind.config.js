@@ -8,26 +8,31 @@ export default {
     extend: {
       colors: {
         primary: {
-          light: '#A6FFCB',
-          DEFAULT: '#1FA2A6',
-          dark: '#147a7d',
+          light: '#6CC8C6',
+          DEFAULT: '#0EA5A4',
+          dark: '#0B8483', // using this for gradient
         },
-        accent: {
-          DEFAULT: '#F9D423',
-        },
-        background: '#f4f6f8',
-        card: '#ffffff',
+        button: '#1496A3',
+        background: '#F8FAFC',
+        card: '#FFFFFF',
+        border: '#E5E7EB',
         text: {
-          primary: '#333333',
-          secondary: '#888888',
+          primary: '#111827',
+          secondary: '#6B7280',
         }
       },
+      backgroundImage: {
+        'primary-gradient': 'linear-gradient(135deg, #0EA5A4 0%, #0B8483 100%)',
+      },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Or 'Outfit' based on the design
+        sans: ['Nunito', 'sans-serif'],
       },
       boxShadow: {
         'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
-        'glass': '0 8px 32px 0 rgba(31, 162, 166, 0.37)'
+      },
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.5rem',
       }
     },
   },

@@ -3,6 +3,7 @@ import api from '../services/api';
 import { Search, Loader2, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { TableSkeleton } from '../components/common/Skeleton';
 
 interface UserData {
   _id: string;
@@ -89,8 +90,8 @@ export const Users = () => {
 
         {/* Content Area */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="py-2">
+             <TableSkeleton columns={6} rows={6} />
           </div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 text-red-500">

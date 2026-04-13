@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
-import { Loader2, Zap } from 'lucide-react';
 import { format } from 'date-fns';
+import { TableSkeleton } from '../components/common/Skeleton';
+import { Zap } from 'lucide-react';
 
 interface TicketData {
   _id: string;
@@ -75,7 +76,7 @@ export const Tickets = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <div className="py-2"><TableSkeleton columns={7} rows={6} /></div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 text-red-500">{error}</div>
         ) : tickets.length === 0 ? (
@@ -104,7 +105,7 @@ export const Tickets = () => {
                       <div className="max-w-[150px] truncate" title={t.description}>{t.subject}</div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold flex items-center max-w-fit gap-1 ${
+                      <span className={`px-2 py-1 rounded text-[11px] font-bold flex items-center max-w-fit gap-1 ${
                         t.priority === 'Urgent' ? 'bg-red-100 text-red-700' : 
                         t.priority === 'High' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
                       }`}>
