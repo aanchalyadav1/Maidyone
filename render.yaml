@@ -2,7 +2,7 @@ services:
   - type: web
     name: maidyone-backend
     env: node
-    buildCommand: "cd backend && npm install && npm run build"
+    buildCommand: "cd backend && npm install --include=dev && npm run build"
     startCommand: "cd backend && npm start"
     envVars:
       - key: MONGO_URI
@@ -20,7 +20,7 @@ services:
   - type: web
     name: maidyone-frontend
     env: static
-    buildCommand: "cd frontend && npm install && npm run build"
+    buildCommand: "cd frontend && npm install --include=dev && npm run build"
     staticPublishPath: "./frontend/dist"
     envVars:
       - key: VITE_API_URL
