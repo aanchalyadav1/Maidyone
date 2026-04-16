@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -90,10 +101,11 @@ const createBooking = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     try {
         // Generate unique booking ID
         const bookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
-        const newBooking = new Booking_1.default(Object.assign(Object.assign({}, req.body), { bookingId, user: req.user.uid // Assuming authMiddleware maps internal ObjectId to user.uid
+        // Ensure frontend doesn't override critical defaults:
+        const _a = req.body, { status, date, user } = _a, allowedPayload = __rest(_a, ["status", "date", "user"]);
+        const newBooking = new Booking_1.default(Object.assign(Object.assign({}, allowedPayload), { bookingId, date: new Date(), status: 'Pending', user: req.user._id // Automatically extracted from token/middleware
          }));
         const savedBooking = yield newBooking.save();
-        // Trigger notification here optionally
         (0, responseHandler_1.sendResponse)(res, 201, true, 'Booking created successfully', savedBooking);
     }
     catch (error) {

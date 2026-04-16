@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Building2, Users, ReceiptText, Phone, Mail } from 'lucide-react';
+import { Building2, Users, Receipt, Phone, Mail } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 
@@ -137,7 +137,7 @@ export const BookingDetails = () => {
                </div>
                <div>
                  <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1">
-                   <ReceiptText className="w-3 h-3" /> Special Requests:
+                   <Receipt className="w-3 h-3" /> Special Requests:
                  </p>
                  <p className="font-medium text-[13px]">{booking.specialRequests}</p>
                </div>
