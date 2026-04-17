@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import Payment from '../models/Payment';
 import Booking from '../models/Booking';
+import Notification from '../models/Notification';
 import { sendResponse } from '../utils/responseHandler';
 
 // @desc    Fetch transactions
@@ -77,6 +78,15 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       booking.status = 'Confirmed';
       await booking.save({ session });
     }
+
+    // Auto-trigger notification
+    await Notification.create([{
+      recipient: booking.user,
+      title: `Payment ${status}`,
+      message: `Your payment of ${amount} for booking ${booking.bookingId} has been marked as ${status}.`,
+      type: 'Payment',
+      relatedId: uniquePayId
+    }], { session });
 
     await session.commitTransaction();
     session.endSession();

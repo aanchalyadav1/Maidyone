@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Booking from '../models/Booking';
+import Notification from '../models/Notification';
 import { sendResponse } from '../utils/responseHandler';
 
 // @desc    Get all bookings (with filters, search, pagination)
@@ -96,6 +97,15 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
 
     const savedBooking = await newBooking.save();
     
+    // Auto-trigger notification
+    await Notification.create({
+      recipient: savedBooking.user,
+      title: 'Booking Created',
+      message: `Your booking ${savedBooking.bookingId} has been created and is pending confirmation.`,
+      type: 'Booking',
+      relatedId: savedBooking.bookingId
+    });
+
     sendResponse(res, 201, true, 'Booking created successfully', savedBooking);
   } catch (error) {
     next(error);
@@ -123,6 +133,15 @@ export const updateBookingStatus = async (req: Request, res: Response, next: Nex
       return sendResponse(res, 404, false, 'Booking not found');
     }
 
+    // Auto-trigger notification
+    await Notification.create({
+      recipient: booking.user,
+      title: `Booking ${status}`,
+      message: `Your booking ${booking.bookingId} status has been updated to ${status}.`,
+      type: 'Booking',
+      relatedId: booking.bookingId
+    });
+
     sendResponse(res, 200, true, 'Booking status updated', booking);
   } catch (error) {
     next(error);
@@ -148,6 +167,15 @@ export const assignWorker = async (req: Request, res: Response, next: NextFuncti
     if (!booking) {
       return sendResponse(res, 404, false, 'Booking not found');
     }
+
+    // Auto-trigger notification
+    await Notification.create({
+      recipient: booking.user,
+      title: `Worker Assigned`,
+      message: `A worker has been assigned to your booking ${booking.bookingId}. Status is now Confirmed.`,
+      type: 'Booking',
+      relatedId: booking.bookingId
+    });
 
     sendResponse(res, 200, true, 'Worker assigned successfully', booking);
   } catch (error) {

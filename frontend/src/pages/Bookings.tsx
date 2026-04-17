@@ -17,16 +17,7 @@ interface Booking {
   paymentStatus?: string;
 }
 
-const FALLBACK_DATA: Booking[] = [
-  { _id: '1', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Confirmed', address: '', paymentStatus: 'Paid' },
-  { _id: '2', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Confirmed', address: '', paymentStatus: 'Paid' },
-  { _id: '3', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Confirmed', address: '', paymentStatus: 'Unpaid' },
-  { _id: '4', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Pending', address: '', paymentStatus: 'Paid' },
-  { _id: '5', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Confirmed', address: '', paymentStatus: 'Unpaid' },
-  { _id: '6', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Confirmed', address: '', paymentStatus: 'Paid' },
-  { _id: '7', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Cancelled', address: '', paymentStatus: 'Paid' },
-  { _id: '8', bookingId: 'B1024', user: { name: 'Jhon smith', email: '' }, service: { name: 'Room Cleaning' }, date: '2026-05-20T15:00:00Z', status: 'Complete', address: '', paymentStatus: 'Paid' },
-];
+
 
 export const Bookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -55,13 +46,12 @@ export const Bookings = () => {
       const res: any = await api.get('/bookings', {
         params: { page, limit: 10, search: debouncedSearch }
       });
-      const fetched = res.data.bookings;
-      setBookings(fetched.length > 0 ? fetched : FALLBACK_DATA);
-      setTotalPages(res.data.pagination?.totalPages || 6);
+      setBookings(res.data?.bookings || []);
+      setTotalPages(res.data?.pagination?.totalPages || 1);
     } catch (err: any) {
-      // Intentionally fallback to visually preserve the UI on backend failure
-      setBookings(FALLBACK_DATA);
-      setTotalPages(6);
+      setError("Failed to fetch bookings.");
+      setBookings([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -76,7 +66,7 @@ export const Bookings = () => {
     let bg = 'bg-[#E1F7E3] text-[#1E7145]'; // Complete/Confirmed
     if (lower === 'pending') bg = 'bg-[#FFF4D2] text-[#B88700]';
     if (lower === 'cancelled') bg = 'bg-[#FEE2E2] text-[#DC2626]';
-    if (lower === 'complete') bg = 'bg-[#3b82f6] text-white'; // Figma has blue for complete
+    if (lower === 'complete') bg = 'bg-[#3730A3] text-white'; // Indigo/Deep blue match
 
     return (
       <span className={`px-4 py-[6px] rounded-md text-xs font-bold ${bg}`}>
@@ -140,12 +130,18 @@ export const Bookings = () => {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking, idx) => (
+                {bookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-gray-500">
+                      {error ? <span className="text-red-500">{error}</span> : "No bookings found."}
+                    </td>
+                  </tr>
+                ) : bookings.map((booking, idx) => (
                   <tr key={booking._id || idx} className="border-b border-border/60 hover:bg-gray-50/50 transition-colors text-[14px]">
                     <td className="py-4 px-6 font-bold text-primary">#{booking.bookingId}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <img src="https://i.pravatar.cc/150?img=12" alt="avatar" className="w-8 h-8 rounded-full border border-gray-200" />
+                        <img src={booking.user?.avatar || `https://i.pravatar.cc/150?img=${idx % 70}`} alt="avatar" className="w-8 h-8 rounded-full border border-gray-200" />
                         <span className="font-bold text-text-primary">{booking.user?.name || 'Unknown'}</span>
                       </div>
                     </td>

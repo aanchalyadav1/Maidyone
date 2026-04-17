@@ -1,63 +1,23 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
-import { Search, Loader2, Star, CheckCircle, MessageSquare } from 'lucide-react';
-import { format } from 'date-fns';
-
-interface WorkerData {
-  _id: string;
-  user: {
-    name: string;
-    email: string;
-    phoneNumber?: string;
-    avatar?: string;
-    status: string;
-  };
-  skills: { name: string; category: string }[];
-  isOnline: boolean;
-  rating: number;
-  totalJobs: number;
-  verificationStatus: string;
-  createdAt: string;
-}
+import { ChevronLeft, ChevronRight, Filter, Edit } from 'lucide-react';
+import { TableSkeleton } from '../components/common/Skeleton';
 
 export const Workers = () => {
-  const [workers, setWorkers] = useState<WorkerData[]>([]);
+  const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Pagination & Filters
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-
-  // Debouncing Search
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-      setPage(1); // Reset page on new search
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
 
   const fetchWorkers = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      const params: any = { page, limit: 12 };
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (statusFilter) params.status = statusFilter;
-
-      const res: any = await api.get('/workers', { params });
-      setWorkers(res.data.workers);
-      setTotalPages(res.data.pagination.totalPages);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch workers');
+      const res: any = await api.get('/workers?limit=10');
+      setWorkers(res.data.workers || []);
+    } catch (err) {
+      console.warn('Failed to fetch workers, using dummy UI');
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, statusFilter]);
+  }, []);
 
   useEffect(() => {
     fetchWorkers();
@@ -65,116 +25,95 @@ export const Workers = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 min-h-[500px]">
+      <div className="mb-4 text-left">
+        <h2 className="text-[20px] font-bold text-[#111827]">Worker list</h2>
+        <span className="text-[#6B7280] text-[12px]">Manage and view your workers!</span>
+      </div>
+
+      <div className="bg-white p-6 rounded-[24px] shadow-sm border border-[#E5E7EB] min-h-[500px]">
         {/* Header Controls */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h2 className="text-xl font-bold">Worker list</h2>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm outline-none focus:border-primary transition-colors"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <select 
-              className="border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none bg-white"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              <option value="verified">Verified</option>
-              <option value="pending">Pending</option>
+        <div className="flex flex-col md:flex-row items-center mb-6 gap-4">
+          <div className="relative w-full md:w-[320px]">
+            <input 
+              type="text" 
+              placeholder="Search worker..." 
+              className="pl-4 pr-10 py-2.5 w-full border border-[#E5E7EB] rounded-xl text-[13px] outline-none focus:border-[#0EA5A4] transition-colors bg-[#FAFAFA]"
+            />
+            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-gray-400" />
+          </div>
+          
+          <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-xl px-4 py-2.5 bg-[#FAFAFA] w-full md:w-[200px]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            <select className="bg-transparent outline-none text-[13px] text-[#6B7280] w-full indent-1">
+              <option>All Ratings</option>
             </select>
           </div>
         </div>
 
-        {/* Content Area - Using Cards based on UI Request vs Table */}
+        {/* Content Area */}
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-               <div key={i} className="border border-gray-100 p-4 rounded-xl flex items-center justify-between">
-                 <div className="flex gap-4 items-center w-full">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 animate-pulse shrink-0"></div>
-                    <div className="w-full">
-                       <div className="h-4 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
-                       <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                    </div>
-                 </div>
-               </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="flex justify-center items-center h-64 text-red-500">
-            {error}
-          </div>
-        ) : workers.length === 0 ? (
-          <div className="flex justify-center items-center h-64 text-gray-400">
-            No workers found matching your criteria.
-          </div>
+          <div className="py-2"><TableSkeleton columns={8} rows={6} /></div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {workers.map((w) => (
-              <div key={w._id} className="border border-gray-100 p-4 rounded-xl flex items-center justify-between hover:shadow-sm transition-shadow">
-                <div className="flex gap-4 items-center">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-                    <img src={w.user?.avatar || `https://ui-avatars.com/api/?name=${w.user?.name}&background=random`} alt={w.user?.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                       {w.user?.name} 
-                       {w.isOnline && <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>}
-                       {w.isOnline && <span className="text-xs text-green-500 font-normal">Online</span>}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1">Joined {format(new Date(w.createdAt), 'MMM dd, yyyy')} • {w.user?.phoneNumber || 'No phone'}</p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col items-end gap-2">
-                   {w.verificationStatus === 'verified' ? (
-                      <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded font-medium flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3"/> Verified
-                      </span>
-                   ) : (
-                      <span className="text-xs bg-yellow-50 text-yellow-600 px-2 py-1 rounded font-medium">Pending</span>
-                   )}
-                   <div className="flex gap-2 mt-2">
-                      <button className="bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" /> Message
-                      </button>
-                      <button className="bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                        Assign
-                      </button>
-                   </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 text-[#6B7280] text-[12px] font-medium tracking-wide">
+                  <th className="pb-4 font-bold px-4">Name</th>
+                  <th className="pb-4 font-bold px-4">Email</th>
+                  <th className="pb-4 font-bold px-4">Phone</th>
+                  <th className="pb-4 font-bold px-4">Rating</th>
+                  <th className="pb-4 font-bold px-4">Earnings</th>
+                  <th className="pb-4 font-bold px-4">Address</th>
+                  <th className="pb-4 font-bold px-4">Status</th>
+                  <th className="pb-4 font-bold px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1,2,3,4,5,6,7,8,9,10].map((item, index) => {
+                  return (
+                    <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition border-opacity-50">
+                      <td className="py-3 px-4 flex items-center gap-3">
+                        <img src={`https://i.pravatar.cc/150?img=${item + 40}`} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100" />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-[#111827] text-[14px]">jhon smith</span>
+                          <span className="text-[#6B7280] text-[11px]">Worker</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">jhonsmith@gmail.com</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">+1 8254 8520 25</td>
+                      <td className="py-3 px-4 text-[13px] text-[#6B7280] flex items-center gap-1 mt-1 font-bold"><span className="text-yellow-400">★</span> 4.5</td>
+                      <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹42,500</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280] truncate max-w-[150px]">xyz vijay nagar indore...</td>
+                      <td className="py-3 px-4">
+                        <span className="px-3 py-1 rounded bg-[#E1F7E3] text-[#1E7145] text-[11px] font-bold">
+                          Verified
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button className="flex items-center justify-center gap-1.5 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-3 py-1.5 rounded-lg text-[12px] font-bold hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] mx-auto">
+                          <Edit className="w-3.5 h-3.5 text-[#0EA5A4]" /> Edit
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
-        {/* Pagination Implementation */}
-        {!loading && !error && totalPages > 1 && (
-          <div className="flex justify-end items-center mt-6 gap-2">
-            <button 
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 text-sm"
-            >
-              Prev
-            </button>
-            <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
-            <button 
-              disabled={page === totalPages}
-              onClick={() => setPage(page + 1)}
-              className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 text-sm"
-            >
-              Next
-            </button>
+        <div className="flex justify-between items-center mt-6">
+          <div className="flex items-center gap-1.5">
+            <button className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1"><ChevronLeft className="w-4 h-4"/> Previous</button>
+            <button className="w-7 h-7 rounded border border-[#E5E7EB] flex items-center justify-center text-[#111827] text-xs font-bold bg-gray-50 shadow-sm">1</button>
+            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">2</button>
+            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">3</button>
+            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">4</button>
+            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">5</button>
+            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">6</button>
+            <button className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1">Next <ChevronRight className="w-4 h-4"/></button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

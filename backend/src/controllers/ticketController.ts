@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Ticket from '../models/Ticket';
+import Notification from '../models/Notification';
 import { sendResponse } from '../utils/responseHandler';
 
 export const getTickets = async (req: Request, res: Response, next: NextFunction) => {
@@ -63,6 +64,15 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
       priority: priority || 'Medium'
     });
 
+    // Auto-trigger notification
+    await Notification.create({
+      recipient: userId,
+      title: 'Ticket Created',
+      message: `Your ticket ${tId} has been opened currently pending review.`,
+      type: 'Ticket',
+      relatedId: tId
+    });
+
     sendResponse(res, 201, true, 'Ticket created', newTicket);
   } catch (error) {
     next(error);
@@ -85,6 +95,17 @@ export const updateTicketStatus = async (req: Request, res: Response, next: Next
 
     if (!ticket) return sendResponse(res, 404, false, 'Ticket not found');
     
+    // Auto-trigger notification if status changed
+    if (status) {
+      await Notification.create({
+        recipient: ticket.user,
+        title: `Ticket ${status}`,
+        message: `Your ticket ${ticket.ticketId} status has been updated to ${status}.`,
+        type: 'Ticket',
+        relatedId: ticket.ticketId
+      });
+    }
+
     sendResponse(res, 200, true, 'Ticket updated', ticket);
   } catch (error) {
     next(error);

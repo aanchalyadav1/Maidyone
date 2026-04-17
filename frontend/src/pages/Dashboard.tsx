@@ -1,43 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { StatCard } from '../components/common/StatCard';
 import { BookingTrendChart } from '../components/charts/BookingTrendChart';
+import { ServiceDistributionChart } from '../components/charts/ServiceDistributionChart';
 import { FileText, Clock, Component, CheckCircle, XCircle, Users, Briefcase, ShieldAlert, BadgeDollarSign, Wallet, Plus, Bell, AlignLeft, Lock } from 'lucide-react';
 import api from '../services/api';
 
-const FALLBACK_DATA = {
+const INITIAL_DATA = {
   stats: {
-    totalBookings: 2547, pendingBookings: 1250, ongoingBookings: 570, completedBookings: 34590, cancelledBookings: 2547,
-    totalUsers: 25272, totalWorkers: 3250, pendingVerification: 340, todayRevenue: 34590, totalRevenue: 1532315
+    totalBookings: 0, pendingBookings: 0, ongoingBookings: 0, completedBookings: 0, cancelledBookings: 0,
+    totalUsers: 0, totalWorkers: 0, pendingVerification: 0, todayRevenue: 0, totalRevenue: 0
   },
-  trendData: [
-    { date: '17 Apr', Booking: 80, Completed: 50 }, { date: '18 Apr', Booking: 150, Completed: 100 },
-    { date: '19 Apr', Booking: 100, Completed: 70 }, { date: '20 Apr', Booking: 220, Completed: 120 },
-    { date: '21 Apr', Booking: 110, Completed: 90 }, { date: '22 Apr', Booking: 250, Completed: 160 },
-    { date: '23 Apr', Booking: 180, Completed: 110 }, { date: '24 Apr', Booking: 300, Completed: 150 }
+  bookingTrend: [],
+  revenueTrend: [],
+  serviceDistribution: [],
+  cityStats: [
+    { city: 'Indore', bookings: 0, percent: 0, trend: '0%' },
+    { city: 'Bhopal', bookings: 0, percent: 0, trend: '0%' }
   ],
-  cityWise: [
-    { city: 'Indore', bookings: 662, percent: 80, trend: '+35.7%' },
-    { city: 'Bhopal', bookings: 530, percent: 65, trend: '+13.5%' },
-    { city: 'New Delhi', bookings: 375, percent: 50, trend: '+15.7%' },
-    { city: 'Noida', bookings: 250, percent: 35, trend: '+12.5%' },
-    { city: 'Gurugram', bookings: 460, percent: 60, trend: '+12.2%' },
-  ],
-  recentBookings: [
-    { id: '#BK-7845', name: 'Priya sharma', service: 'Room cleaning - Vijay nagar', time: '10:00 AM', status: 'Assign', color: 'bg-[#B2DFDB] text-[#00796B]' },
-    { id: '#BK-7844', name: 'Priya sharma', service: 'Room cleaning - Vijay nagar', time: '10:00 AM', status: 'Ongoing', color: 'bg-[#FFF9C4] text-[#FBC02D]' },
-    { id: '#BK-7843', name: 'Priya sharma', service: 'Room cleaning - Vijay nagar', time: '10:00 AM', status: 'Completed', color: 'bg-[#C8E6C9] text-[#388E3C]' },
-    { id: '#BK-7842', name: 'Priya sharma', service: 'Room cleaning - Vijay nagar', time: '10:00 AM', status: 'Pending', color: 'bg-[#E1F5FE] text-[#0288D1]' },
-    { id: '#BK-7841', name: 'Priya sharma', service: 'Room cleaning - Vijay nagar', time: '10:00 AM', status: 'Cancelled', color: 'bg-[#FFCCBC] text-[#D32F2F]' }
-  ],
-  workerRequests: [
-    { name: 'Anita dodve', city: 'Indore', time: 'Applied 34 min ago' },
-    { name: 'Anita dodve', city: 'Indore', time: 'Applied 34 min ago' }
-  ],
-  complains: [
-    { id: '#C - 1562', desc: 'Service Quality - Room cleaning' },
-    { id: '#C - 1561', desc: 'Payment Issues - Home cleaning' },
-    { id: '#C - 1560', desc: 'Application problem - cleaning' }
-  ]
+  recentBookings: [],
+  workerRequests: [],
+  complains: []
 };
 
 const DashboardSkeleton = () => (
@@ -66,7 +48,7 @@ const DashboardSkeleton = () => (
 );
 
 export const Dashboard = () => {
-  const [data, setData] = useState<any>(FALLBACK_DATA);
+  const [data, setData] = useState<any>(INITIAL_DATA);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,15 +56,28 @@ export const Dashboard = () => {
       try {
         setLoading(true);
         const res: any = await api.get('/dashboard');
+        
         setData({
-          ...FALLBACK_DATA,
-          stats: { ...FALLBACK_DATA.stats, ...res.data?.stats },
-          trendData: res.data?.trendData?.length ? res.data.trendData : FALLBACK_DATA.trendData 
+          ...INITIAL_DATA,
+          stats: { ...INITIAL_DATA.stats, ...res.data?.stats },
+          bookingTrend: res.data?.bookingTrend || [],
+          revenueTrend: res.data?.revenueTrend || [],
+          serviceDistribution: res.data?.serviceDistribution || [],
+          cityStats: res.data?.cityStats?.length ? 
+            res.data.cityStats.map((c: any) => ({
+              city: c.city,
+              bookings: c.bookings,
+              percent: Math.min((c.bookings / (res.data.stats.totalBookings || 1)) * 100, 100),
+              trend: 'Live'
+            })) : INITIAL_DATA.cityStats,
+          recentBookings: res.data?.recentBookings || [],
+          workerRequests: res.data?.workerRequests || [],
+          complains: res.data?.complaints || []
         });
       } catch (err) {
-        console.warn("Failed to fetch dashboard, using fallbacks");
+        console.warn("Failed to fetch dashboard, keeping empty state");
       } finally {
-        setTimeout(() => setLoading(false), 800); // Demo the layout loading exactly as user requested
+        setLoading(false);
       }
     };
     fetchDashboard();
@@ -115,7 +110,7 @@ export const Dashboard = () => {
              <h3 className="font-bold text-[15px]">Booking Trend</h3>
              <select className="text-[11px] border border-border rounded px-2 py-1 outline-none text-text-secondary"><option>Last 7 days</option></select>
            </div>
-           <BookingTrendChart data={data.trendData} />
+           <BookingTrendChart data={data.bookingTrend} />
         </div>
         
         <div className="col-span-1 lg:col-span-1 border border-border bg-white rounded-[24px] p-6 shadow-sm min-h-[320px] flex items-end justify-between relative overflow-hidden">
@@ -123,14 +118,28 @@ export const Dashboard = () => {
            <div className="absolute top-6 left-6 right-6 flex justify-between items-start">
              <div>
                <h3 className="font-bold text-[15px] mb-1">Revenue Overview</h3>
-               <div className="flex items-center gap-2"><span className="text-xl font-bold text-primary">₹1,24,580</span><span className="text-[10px] bg-[#E1F7E3] text-[#1E7145] px-2 py-[2px] rounded font-bold">+ 35.7%</span><span className="text-[10px] text-gray-400">vs last 7 days</span></div>
+               <div className="flex items-center gap-2">
+                 <span className="text-xl font-bold text-primary">₹{data.stats.totalRevenue.toLocaleString()}</span>
+                 <span className="text-[10px] bg-[#E1F7E3] text-[#1E7145] px-2 py-[2px] rounded font-bold">+ Live</span>
+                 <span className="text-[10px] text-gray-400">vs last period</span>
+               </div>
              </div>
-             <select className="text-[11px] border border-border rounded px-2 py-1 outline-none text-text-secondary"><option>Last 7 days</option></select>
+             <select className="text-[11px] border border-border rounded px-2 py-1 outline-none text-text-secondary"><option>Last 30 days</option></select>
            </div>
            <div className="w-full h-32 flex items-end justify-between gap-2 px-2 mt-20">
-             {[30, 45, 60, 90, 75, 100, 110, 115].map((h, i) => (
-               <div key={i} className="w-full bg-[#1A73E8] rounded-t-sm" style={{ height: `${h}%` }}></div>
-             ))}
+             {data.revenueTrend.length === 0 ? (
+               <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No revenue data</div>
+             ) : data.revenueTrend.map((r: any, i: number) => {
+               const maxAmount = Math.max(...data.revenueTrend.map((d: any) => d.amount));
+               const heightPercent = maxAmount > 0 ? (r.amount / maxAmount) * 100 : 0;
+               return (
+                 <div key={i} className="w-full bg-[#1A73E8] rounded-t-sm transition-all hover:bg-blue-600 cursor-pointer group relative" style={{ height: `${heightPercent}%` }}>
+                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10 transition-opacity">
+                      ₹{r.amount.toLocaleString()}<br/>{r.date}
+                   </div>
+                 </div>
+               );
+             })}
            </div>
         </div>
 
@@ -161,6 +170,15 @@ export const Dashboard = () => {
       {/* Bottom Lists Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
+        {/* Service wise booking */}
+        <div className="border border-border bg-white rounded-[24px] p-5 shadow-sm col-span-1 lg:col-span-1">
+           <div className="flex justify-between items-center mb-2">
+             <h3 className="font-bold text-[15px]">Service wise booking</h3>
+             <select className="text-[11px] border border-border rounded px-2 py-1 outline-none"><option>Last 7 days</option></select>
+           </div>
+           <ServiceDistributionChart data={data.serviceDistribution} />
+        </div>
+
         {/* City Wise Performance */}
         <div className="border border-border bg-white rounded-[24px] p-5 shadow-sm">
            <div className="flex justify-between items-center mb-6">
@@ -168,7 +186,7 @@ export const Dashboard = () => {
              <select className="text-[11px] border border-border rounded px-2 py-1 outline-none"><option>This month</option></select>
            </div>
            <div className="space-y-4">
-             {data.cityWise.map((c: any, i: number) => (
+             {data.cityStats.map((c: any, i: number) => (
                <div key={i}>
                  <div className="flex justify-between items-end mb-1">
                    <div>
@@ -193,18 +211,20 @@ export const Dashboard = () => {
              <button className="text-primary text-[12px] font-bold hover:underline">View All</button>
            </div>
            <div className="flex flex-col gap-4">
-             {data.recentBookings.map((b: any, i: number) => (
+             {data.recentBookings.length === 0 ? (
+               <div className="text-center text-sm text-gray-500 py-4">No recent bookings found.</div>
+             ) : data.recentBookings.map((b: any, i: number) => (
                 <div key={i} className="flex justify-between items-center border-b border-border/50 pb-3 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">
-                    <img src={`https://i.pravatar.cc/150?img=${i+20}`} className="w-9 h-9 rounded-full border border-gray-200" alt="user" />
+                    <img src={b.user?.avatar || `https://i.pravatar.cc/150?img=${i+20}`} className="w-9 h-9 rounded-full border border-gray-200" alt="user" />
                     <div className="leading-tight">
-                      <p className="font-bold text-[13px] flex items-center gap-2">{b.id} <span className="text-text-primary/70 font-semibold">{b.name}</span></p>
-                      <p className="text-[11px] text-text-secondary">{b.service}</p>
+                      <p className="font-bold text-[13px] flex items-center gap-2">{b.bookingId || `#BK-00${i}`} <span className="text-text-primary/70 font-semibold">{b.user?.name || 'Unknown'}</span></p>
+                      <p className="text-[11px] text-text-secondary">{b.service?.name}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[9px] px-2 py-[2px] rounded uppercase font-bold tracking-wide ${b.color}`}>{b.status}</span>
-                    <span className="text-[10px] text-text-secondary">{b.time}</span>
+                    <span className={`text-[9px] px-2 py-[2px] rounded uppercase font-bold tracking-wide ${b.status === 'Completed' ? 'bg-[#C8E6C9] text-[#388E3C]' : 'bg-[#E1F5FE] text-[#0288D1]'}`}>{b.status || 'Pending'}</span>
+                    <span className="text-[10px] text-text-secondary">{new Date(b.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
              ))}
@@ -219,14 +239,16 @@ export const Dashboard = () => {
                 <button className="text-primary text-[12px] font-bold hover:underline">View All</button>
               </div>
               <div className="flex flex-col gap-3">
-                {data.workerRequests.map((w: any, i: number) => (
+                {data.workerRequests.length === 0 ? (
+                  <div className="text-center text-sm text-gray-500 py-4">No pending worker requests.</div>
+                ) : data.workerRequests.map((w: any, i: number) => (
                   <div key={i} className="flex justify-between items-center border-b border-border/50 pb-3 last:border-0 last:pb-0">
                     <div className="flex items-center gap-3">
-                      <img src={`https://i.pravatar.cc/150?img=${i+40}`} className="w-9 h-9 rounded-full border border-gray-200" alt="worker" />
+                      <img src={w.user?.avatar || `https://i.pravatar.cc/150?img=${i+40}`} className="w-9 h-9 rounded-full border border-gray-200" alt="worker" />
                       <div className="leading-tight">
-                        <p className="font-bold text-[13px]">{w.name}</p>
-                        <p className="text-[11px] text-text-primary/80">{w.city}</p>
-                        <p className="text-[10px] text-text-secondary">{w.time}</p>
+                        <p className="font-bold text-[13px]">{w.user?.name}</p>
+                        <p className="text-[11px] text-text-primary/80">{w.location?.city || 'Location N/A'}</p>
+                        <p className="text-[10px] text-text-secondary">Applied {new Date(w.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <button className="bg-[#1A73E8] text-white text-[10px] font-bold px-3 py-1.5 rounded-md hover:bg-blue-700 transition">Review</button>
@@ -241,12 +263,14 @@ export const Dashboard = () => {
                 <button className="text-primary text-[12px] font-bold hover:underline">View All</button>
               </div>
               <div className="flex flex-col gap-3">
-                {data.complains.map((c: any, i: number) => (
+                {data.complains.length === 0 ? (
+                  <div className="text-center text-sm text-gray-500 py-4">No open complaints found.</div>
+                ) : data.complains.map((c: any, i: number) => (
                   <div key={i} className="flex items-start gap-4 border-b border-border/50 pb-3 last:border-0 last:pb-0">
                     <div className="mt-1"><Lock className="w-[18px] h-[18px] text-gray-500"/></div>
                     <div className="leading-tight">
-                      <p className="font-bold text-[13px] mb-0.5">{c.id}</p>
-                      <p className="text-[11px] text-text-secondary">{c.desc}</p>
+                      <p className="font-bold text-[13px] mb-0.5">{c.ticketId || `#TKT-00${i}`}</p>
+                      <p className="text-[11px] text-text-secondary">{c.subject}</p>
                     </div>
                   </div>
                 ))}
