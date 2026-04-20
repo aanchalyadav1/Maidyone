@@ -14,205 +14,107 @@ export const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const token = "dummy-production-firebase-token-123";
+    const token = "dummy-production-firebase-token-123";
 
-      dispatch(
-        setCredentials({
-          user: {
-            uid: "admin-1",
-            role: "admin",
-            phoneNumber: phone,
-            email: null,
-          },
-          token,
-        })
-      );
+    dispatch(
+      setCredentials({
+        user: {
+          uid: "admin-1",
+          role: "admin",
+          phoneNumber: phone,
+          email: null,
+        },
+        token,
+      })
+    );
 
-      navigate("/");
-    } catch (err) {
-      alert("Failed to authenticate.");
-    }
+    navigate("/");
   };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#F4F6F8] flex items-center justify-center">
 
-      {/* GREEN */}
+      {/* GREEN CIRCLE */}
       <div
         className="absolute bg-[#0EA5A4] rounded-full"
         style={{
-          width: "950px",
-          height: "950px",
-          left: "-400px",
+          width: "900px",
+          height: "900px",
+          left: "-350px",
           top: "-350px",
-          zIndex: 1,
         }}
       />
 
-      {/* YELLOW */}
+      {/* YELLOW CIRCLE */}
       <div
         className="absolute bg-[#FACC15] rounded-full"
         style={{
-          width: "1100px",
-          height: "1100px",
-          left: "-350px",
-          bottom: "-550px",
-          zIndex: 0,
+          width: "850px",
+          height: "850px",
+          left: "-200px",
+          bottom: "-500px",
         }}
       />
 
       {/* CARD */}
       <div className="relative z-10 w-[420px] h-[520px] rounded-[28px] 
       bg-gradient-to-br from-[#6EC6BD] to-[#DDEFEF] 
-      shadow-[0_25px_50px_rgba(0,0,0,0.15)]
-      flex flex-col items-center justify-center px-8">
+      shadow-xl flex flex-col items-center justify-center px-8">
 
-        <div className="absolute top-0 left-0 h-full w-28 rounded-[28px]"
-          style={{
-            background: "linear-gradient(to right, rgba(255,255,255,0.35), transparent)",
-          }}
-        />
+        <h1 className="text-white text-3xl font-semibold mb-6">
+          Maidyone
+        </h1>
 
-        <div className="relative w-full flex flex-col items-center">
+        <h2 className="text-gray-800 text-lg font-semibold mb-1">
+          Sign in
+        </h2>
 
-          <h1 className="text-white text-3xl font-semibold mb-6">
-            Maidyone
-          </h1>
+        <p className="text-gray-600 text-sm mb-6 text-center">
+          Welcome back, you've been missed
+        </p>
 
-          <h2 className="text-gray-800 text-lg font-semibold mb-1">
-            Sign in
-          </h2>
+        <form onSubmit={handleLogin} className="w-full space-y-4">
 
-          <p className="text-gray-600 text-sm mb-6 text-center">
-            Hii, Welcome Back, you've been missed
-          </p>
+          {/* PHONE */}
+          <div className="relative">
+            <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Enter your phone..."
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full pl-12 py-3 rounded-lg bg-gray-200 outline-none"
+              required
+            />
+          </div>
 
-          <form onSubmit={handleLogin} className="w-full space-y-4">
+          {/* PASSWORD */}
+          <div className="relative">
+            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
+            <input
+              type="password"
+              placeholder="Enter your password..."
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-12 py-3 rounded-lg bg-gray-200 outline-none"
+              required
+            />
+          </div>
 
-            {/* PHONE */}
-            <div className="relative">
-              <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Enter your phone..."
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[#E5E7EB] text-gray-800 outline-none"
-                required
-              />
-            </div>
-
-            {/* PASSWORD */}
-            <div className="relative">
-              <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                placeholder="Enter your password..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[#E5E7EB] text-gray-800 outline-none"
-                required
-              />
-            </div>
-
-            {/* FORGOT */}
-            <div className="text-right">
-              <button type="button" className="text-sm text-gray-600">
-                Forgot Password
-              </button>
-            </div>
-
-            {/* LOGIN */}
-            <button
-              type="submit"
-              className="w-full bg-black text-white py-3 rounded-lg shadow-lg"
-            >
-              Login
+          <div className="text-right">
+            <button type="button" className="text-sm text-gray-600">
+              Forgot Password
             </button>
+          </div>
 
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};                bg-[#E5E7EB] text-gray-800 outline-none"
-                required
-              />
-            </div>
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-3 rounded-lg"
+          >
+            Login
+          </button>
 
-            {/* PASSWORD */}
-            <div className="relative">
-              <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                placeholder="Enter your password..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg 
-                bg-[#E5E7EB] text-gray-800 outline-none"
-                required
-              />
-            </div>
-
-            {/* FORGOT */}
-            <div className="text-right">
-              <button
-                type="button"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Forgot Password
-              </button>
-            </div>
-
-            {/* LOGIN BUTTON */}
-            <button
-              type="submit"
-              className="w-full bg-black text-white py-3 rounded-lg 
-              shadow-lg hover:bg-gray-900 transition"
-            >
-              Login
-            </button>
-
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};            <div className="relative">
-              <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                placeholder="Enter your password..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg 
-                bg-[#E5E7EB] text-gray-800 outline-none"
-                required
-              />
-            </div>
-
-            {/* FORGOT PASSWORD */}
-            <div className="text-right">
-              <button
-                type="button"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Forgot Password
-              </button>
-            </div>
-
-            {/* LOGIN BUTTON */}
-            <button
-              type="submit"
-              className="w-full bg-black text-white py-3 rounded-lg 
-              shadow-lg hover:bg-gray-900 transition"
-            >
-              Login
-            </button>
-
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   );
