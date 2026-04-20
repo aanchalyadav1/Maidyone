@@ -17,7 +17,6 @@ export const Login = () => {
     try {
       const token = "dummy-production-firebase-token-123";
 
-      // ✅ FIXED: phoneNumber instead of phone
       dispatch(
         setCredentials({
           user: {
@@ -39,7 +38,7 @@ export const Login = () => {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#F4F6F8] flex items-center justify-center">
 
-      {/* 🟢 GREEN CIRCLE */}
+      {/* GREEN */}
       <div
         className="absolute bg-[#0EA5A4] rounded-full"
         style={{
@@ -51,7 +50,7 @@ export const Login = () => {
         }}
       />
 
-      {/* 🟡 YELLOW CIRCLE */}
+      {/* YELLOW */}
       <div
         className="absolute bg-[#FACC15] rounded-full"
         style={{
@@ -63,24 +62,18 @@ export const Login = () => {
         }}
       />
 
-      {/* LOGIN CARD */}
-      <div
-        className="relative z-10 w-[420px] h-[520px] rounded-[28px] 
-        bg-gradient-to-br from-[#6EC6BD] to-[#DDEFEF] 
-        shadow-[0_25px_50px_rgba(0,0,0,0.15)]
-        flex flex-col items-center justify-center px-8"
-      >
+      {/* CARD */}
+      <div className="relative z-10 w-[420px] h-[520px] rounded-[28px] 
+      bg-gradient-to-br from-[#6EC6BD] to-[#DDEFEF] 
+      shadow-[0_25px_50px_rgba(0,0,0,0.15)]
+      flex flex-col items-center justify-center px-8">
 
-        {/* LEFT GLOSS STRIP */}
-        <div
-          className="absolute top-0 left-0 h-full w-28 rounded-[28px]"
+        <div className="absolute top-0 left-0 h-full w-28 rounded-[28px]"
           style={{
-            background:
-              "linear-gradient(to right, rgba(255,255,255,0.35), transparent)",
+            background: "linear-gradient(to right, rgba(255,255,255,0.35), transparent)",
           }}
         />
 
-        {/* CONTENT */}
         <div className="relative w-full flex flex-col items-center">
 
           <h1 className="text-white text-3xl font-semibold mb-6">
@@ -105,8 +98,45 @@ export const Login = () => {
                 placeholder="Enter your phone..."
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg 
-                bg-[#E5E7EB] text-gray-800 outline-none"
+                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[#E5E7EB] text-gray-800 outline-none"
+                required
+              />
+            </div>
+
+            {/* PASSWORD */}
+            <div className="relative">
+              <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
+              <input
+                type="password"
+                placeholder="Enter your password..."
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[#E5E7EB] text-gray-800 outline-none"
+                required
+              />
+            </div>
+
+            {/* FORGOT */}
+            <div className="text-right">
+              <button type="button" className="text-sm text-gray-600">
+                Forgot Password
+              </button>
+            </div>
+
+            {/* LOGIN */}
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-3 rounded-lg shadow-lg"
+            >
+              Login
+            </button>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};                bg-[#E5E7EB] text-gray-800 outline-none"
                 required
               />
             </div>
