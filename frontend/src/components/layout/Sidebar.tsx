@@ -36,7 +36,7 @@ const navItems = [
 
 export const Sidebar = () => {
   return (
-    <aside className="w-full h-full bg-gradient-to-b from-[#0EA5A4] to-[#06B6D4] md:from-[#0EA5A4] md:via-[#6CC8C6] md:to-[#E9D060] rounded-[32px] flex flex-col justify-between overflow-hidden relative shadow-lg">
+    <aside className="w-full h-full bg-gradient-to-b from-[#0EA5A4]/90 to-[#06B6D4]/90 md:from-[#0EA5A4]/90 md:via-[#6CC8C6]/90 md:to-[#E9D060]/90 backdrop-blur-sm rounded-[32px] flex flex-col justify-between overflow-hidden relative shadow-lg">
       <div className="relative z-10 p-6 pt-8 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="flex flex-col items-center mb-8">
           <img src="https://i.pravatar.cc/150?img=11" alt="Profile" className="w-[72px] h-[72px] rounded-full border-[3px] border-white mb-3 shadow-md" />
