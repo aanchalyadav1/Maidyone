@@ -119,15 +119,3 @@ export const Login = () => {
     </div>
   );
 };
-          <button
-            type="submit"
-            className="w-full bg-black text-white py-3 rounded-lg"
-          >
-            Login
-          </button>
-
-        </form>
-      </div>
-    </div>
-  );
-};
