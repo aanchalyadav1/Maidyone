@@ -17,14 +17,38 @@ export const AdminLayout = () => {
       </div>
 
       {/* Main Body */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative bg-white">
+        {/* Decorative Circles Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* TEAL CIRCLE */}
+          <div
+            className="absolute bg-[#0EA5A4] rounded-full"
+            style={{
+              width: "300px",
+              height: "300px",
+              left: "-150px",
+              top: "500px",
+            }}
+          />
+          {/* YELLOW CIRCLE */}
+          <div
+            className="absolute bg-[#FACC15] rounded-full"
+            style={{
+              width: "500px",
+              height: "500px",
+              left: "-250px",
+              top: "700px",
+            }}
+          />
+        </div>
+
         {/* Sidebar Area */}
-        <div className="w-[280px] p-6 pt-8 shrink-0 overflow-hidden relative">
+        <div className="w-[280px] p-6 pt-8 shrink-0 overflow-hidden relative z-10">
           <Sidebar />
         </div>
 
         {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-8 py-8 custom-scrollbar">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-8 py-8 custom-scrollbar relative z-20">
           <Outlet />
         </main>
       </div>
