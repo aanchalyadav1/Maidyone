@@ -34,14 +34,14 @@ export const Login = () => {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#F4F6F8] flex items-center justify-center">
 
-      {/* GREEN CIRCLE */}
+      {/* TEAL CIRCLE */}
       <div
         className="absolute bg-[#0EA5A4] rounded-full"
         style={{
-          width: "900px",
-          height: "900px",
-          left: "-350px",
-          top: "-350px",
+          width: "1200px",
+          height: "1200px",
+          left: "-450px",
+          top: "-200px",
         }}
       />
 
@@ -49,16 +49,16 @@ export const Login = () => {
       <div
         className="absolute bg-[#FACC15] rounded-full"
         style={{
-          width: "850px",
-          height: "850px",
-          left: "-200px",
-          bottom: "-500px",
+          width: "1800px",
+          height: "1800px",
+          left: "-300px",
+          bottom: "-1200px",
         }}
       />
 
       {/* CARD */}
       <div className="relative z-10 w-[420px] h-[520px] rounded-[28px] 
-      bg-gradient-to-br from-[#6EC6BD] to-[#DDEFEF] 
+      bg-gradient-to-br from-[#6EC6BD]/90 to-[#DDEFEF]/90 backdrop-blur-xs
       shadow-xl flex flex-col items-center justify-center px-8">
 
         <h1 className="text-white text-3xl font-semibold mb-6">
@@ -107,6 +107,18 @@ export const Login = () => {
             </button>
           </div>
 
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-3 rounded-lg"
+          >
+            Login
+          </button>
+
+        </form>
+      </div>
+    </div>
+  );
+};
           <button
             type="submit"
             className="w-full bg-black text-white py-3 rounded-lg"
