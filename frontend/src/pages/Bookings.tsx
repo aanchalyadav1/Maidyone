@@ -171,18 +171,30 @@ export const Bookings = () => {
         {/* Pagination Matches Figma exact style */}
         {!loading && (
           <div className="flex items-center mt-6 gap-2">
-            <button disabled className="flex items-center text-text-secondary text-[13px] font-bold gap-1 mr-2">
+            <button 
+              disabled={page === 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              className="flex items-center text-text-secondary text-[13px] font-bold gap-1 mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
               Previous
             </button>
             <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5, 6].map(p => (
-                <button key={p} className={`w-8 h-8 rounded border text-[13px] font-bold flex items-center justify-center ${page === p ? 'border-primary text-primary' : 'border-border text-text-secondary hover:border-gray-300'}`}>
-                  {p}
+              {[...Array(totalPages)].map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setPage(i + 1)}
+                  className={`w-8 h-8 rounded border text-[13px] font-bold flex items-center justify-center transition-colors ${page === i + 1 ? 'border-primary text-primary' : 'border-border text-text-secondary hover:border-gray-300'}`}
+                >
+                  {i + 1}
                 </button>
               ))}
             </div>
-            <button className="flex items-center text-text-primary text-[13px] font-bold gap-1 ml-2 border border-border px-3 py-1 rounded">
+            <button 
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              className="flex items-center text-text-primary text-[13px] font-bold gap-1 ml-2 border border-border px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+            >
               Next
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>

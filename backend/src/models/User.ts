@@ -9,6 +9,7 @@ export interface IUser extends Document {
   role: 'admin' | 'worker' | 'user';
   status: 'active' | 'inactive' | 'suspended';
   address?: string;
+  password?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +24,7 @@ const UserSchema: Schema = new Schema(
     role: { type: String, enum: ['admin', 'worker', 'user'], default: 'user', index: true },
     status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
     address: { type: String },
+    password: { type: String },
   },
   { timestamps: true }
 );

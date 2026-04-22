@@ -1,5 +1,5 @@
 import { Router } from 'express';
-// import { protect, authorize } from '../middlewares/authMiddleware';
+import { login } from '../controllers/authController';
 
 const router = Router();
 
@@ -9,6 +9,8 @@ router.post('/register', (req, res) => res.json({ msg: 'Register endpoint' }));
 
 // @route   POST /api/v1/auth/login
 // @desc    Login user / Verify Firebase Token
-router.post('/login', (req, res) => res.json({ msg: 'Login endpoint' }));
+router.post('/login', login);
 
 export default router;
+
+

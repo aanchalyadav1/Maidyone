@@ -6,21 +6,32 @@ import { TableSkeleton } from '../components/common/Skeleton';
 export const Users = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const res: any = await api.get('/users?limit=10');
-      setUsers(res.data.users || []);
+      const res: any = await api.get(`/users?page=${page}&limit=${limit}&search=${search}`);
+      const data = res.data || res;
+      setUsers(data.users || (Array.isArray(data) ? data : []));
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
-      console.warn('Failed to fetch users, setting dummy data');
+      console.warn('Failed to fetch users');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, search]);
 
   useEffect(() => {
-    fetchUsers();
+    // debounce search
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [fetchUsers]);
 
   return (
@@ -37,6 +48,8 @@ export const Users = () => {
             <input 
               type="text" 
               placeholder="Search user..." 
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-4 pr-10 py-2.5 w-full border border-[#E5E7EB] rounded-xl text-[13px] outline-none focus:border-[#0EA5A4] transition-colors bg-[#FAFAFA]"
             />
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-gray-400" />
@@ -69,24 +82,27 @@ export const Users = () => {
                 </tr>
               </thead>
               <tbody>
-                {[1,2,3,4,5,6,7,8,9,10].map((item, index) => {
+                {users && users.length > 0 ? users.map((item, index) => {
                   return (
-                    <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition border-opacity-50">
+                    <tr key={item._id || index} className="border-b border-gray-50 hover:bg-gray-50/50 transition border-opacity-50">
                       <td className="py-3 px-4 flex items-center gap-3">
-                        <img src={`https://i.pravatar.cc/150?img=${item + 30}`} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100" alt="avatar" />
+                        <img src={item.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 1}`} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100" alt="avatar" />
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#111827] text-[14px]">jhon smith</span>
-                          <span className="text-[#6B7280] text-[11px]">Manager</span>
+                          <span className="font-bold text-[#111827] text-[14px]">{item.name || "Unknown"}</span>
+                          <span className="text-[#6B7280] text-[11px] capitalize">{item.role || "User"}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">jhonsmith@gmail.com</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">+1 8254 8520 25</td>
-                      <td className="py-3 px-4 text-[13px] text-[#6B7280]">15</td>
-                      <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹4590</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280] truncate max-w-[150px]">xyz vijay nagar indore...</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.email || "-"}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.phoneNumber || "-"}</td>
+                      <td className="py-3 px-4 text-[13px] text-[#6B7280]">{item.bookingsCount || 0}</td>
+                      <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹{item.totalSpend || 0}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280] truncate max-w-[150px]">{item.address || "-"}</td>
                       <td className="py-3 px-4">
-                        <span className="px-3 py-1 rounded bg-[#E1F7E3] text-[#1E7145] text-[11px] font-bold">
-                          Active
+                        <span className={`px-3 py-1 rounded text-[11px] font-bold ${
+                          item.status === 'active' ? 'bg-[#E1F7E3] text-[#1E7145]' : 
+                          item.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Active"}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
@@ -96,7 +112,11 @@ export const Users = () => {
                       </td>
                     </tr>
                   )
-                })}
+                }) : (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4 text-gray-500 text-sm">No users found</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -104,14 +124,35 @@ export const Users = () => {
 
         <div className="flex justify-between items-center mt-6">
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1"><ChevronLeft className="w-4 h-4"/> Previous</button>
-            <button className="w-7 h-7 rounded border border-[#E5E7EB] flex items-center justify-center text-[#111827] text-xs font-bold bg-gray-50 shadow-sm">1</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">2</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">3</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">4</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">5</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-[#6B7280] text-xs hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB] transition">6</button>
-            <button className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1">Next <ChevronRight className="w-4 h-4"/></button>
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4"/> Previous
+            </button>
+            
+            {[...Array(totalPages)].map((_, i) => (
+              <button 
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`w-7 h-7 rounded flex items-center justify-center text-xs transition ${
+                  page === i + 1 
+                    ? 'border border-[#E5E7EB] text-[#111827] font-bold bg-gray-50 shadow-sm' 
+                    : 'text-[#6B7280] hover:bg-gray-50 border border-transparent hover:border-[#E5E7EB]'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex items-center gap-1 text-[12px] font-bold text-gray-500 hover:text-[#111827] px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next <ChevronRight className="w-4 h-4"/>
+            </button>
           </div>
         </div>
       </div>

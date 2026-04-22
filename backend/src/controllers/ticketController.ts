@@ -5,11 +5,17 @@ import { sendResponse } from '../utils/responseHandler';
 
 export const getTickets = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, priority, page = '1', limit = '10' } = req.query;
+    const { search, status, priority, page = '1', limit = '10' } = req.query;
 
     const query: any = {};
     if (status) query.status = status;
     if (priority) query.priority = priority;
+    if (search) {
+      query.$or = [
+        { ticketId: { $regex: search as string, $options: 'i' } },
+        { subject: { $regex: search as string, $options: 'i' } }
+      ];
+    }
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);

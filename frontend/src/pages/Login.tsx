@@ -11,30 +11,46 @@ export const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = "dummy-production-firebase-token-123";
-
-    dispatch(
-      setCredentials({
-        user: {
-          uid: "admin-1",
-          role: "admin",
-          phoneNumber: phone,
-          email: null,
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        token,
-      })
-    );
+        body: JSON.stringify({
+          phone,
+          password,
+        }),
+      });
 
-    navigate("/");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // ✅ IMPORTANT: your backend uses sendResponse → data.data
+      dispatch(
+        setCredentials({
+          user: data.data.user,
+          token: data.data.token,
+        })
+      );
+
+      navigate("/");
+    } catch (error) {
+      alert("Server error");
+    }
   };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#F4F6F8] flex items-center justify-center">
 
-      {/* TEAL CIRCLE */}
+      {/* TEAL SHAPE */}
       <div
         className="absolute bg-[#0EA5A4] rounded-full"
         style={{
@@ -45,7 +61,7 @@ export const Login = () => {
         }}
       />
 
-      {/* YELLOW CIRCLE */}
+      {/* YELLOW SHAPE */}
       <div
         className="absolute bg-[#FACC15] rounded-full"
         style={{
@@ -56,12 +72,16 @@ export const Login = () => {
         }}
       />
 
-      {/* CARD */}
-      <div className="relative z-10 w-[420px] h-[520px] rounded-[28px] 
-      bg-gradient-to-br from-[#6EC6BD]/90 to-[#DDEFEF]/90 backdrop-blur-xs
-      shadow-xl flex flex-col items-center justify-center px-8">
+      {/* LOGIN CARD */}
+      <div
+        className="relative z-10 w-[420px] h-[520px] rounded-[28px] px-8 
+        flex flex-col items-center justify-center
+        bg-gradient-to-br from-[#6EC6BD]/95 to-[#DDEFEF]/95
+        backdrop-blur-md border border-white/30
+        shadow-[0_10px_40px_rgba(0,0,0,0.15)]"
+      >
 
-        <h1 className="text-white text-3xl font-semibold mb-6">
+        <h1 className="text-white text-3xl font-semibold mb-6 tracking-wide">
           Maidyone
         </h1>
 
@@ -70,7 +90,7 @@ export const Login = () => {
         </h2>
 
         <p className="text-gray-600 text-sm mb-6 text-center">
-          Welcome back, you've been missed
+          Hi, Welcome Back, you've been missed
         </p>
 
         <form onSubmit={handleLogin} className="w-full space-y-4">
@@ -83,7 +103,10 @@ export const Login = () => {
               placeholder="Enter your phone..."
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full pl-12 py-3 rounded-lg bg-gray-200 outline-none"
+              className="w-full pl-12 py-3 rounded-lg 
+              bg-white/60 backdrop-blur-sm
+              border border-white/40
+              outline-none focus:ring-2 focus:ring-teal-400"
               required
             />
           </div>
@@ -96,20 +119,29 @@ export const Login = () => {
               placeholder="Enter your password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-12 py-3 rounded-lg bg-gray-200 outline-none"
+              className="w-full pl-12 py-3 rounded-lg 
+              bg-white/60 backdrop-blur-sm
+              border border-white/40
+              outline-none focus:ring-2 focus:ring-teal-400"
               required
             />
           </div>
 
+          {/* FORGOT */}
           <div className="text-right">
-            <button type="button" className="text-sm text-gray-600">
+            <button
+              type="button"
+              className="text-sm text-gray-600 hover:text-black transition"
+            >
               Forgot Password
             </button>
           </div>
 
+          {/* BUTTON */}
           <button
             type="submit"
-            className="w-full bg-black text-white py-3 rounded-lg"
+            className="w-full bg-black text-white py-3 rounded-lg 
+            hover:bg-gray-900 transition duration-200 shadow-md"
           >
             Login
           </button>

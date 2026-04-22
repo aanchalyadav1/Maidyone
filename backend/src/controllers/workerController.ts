@@ -2,15 +2,27 @@ import { Request, Response, NextFunction } from 'express';
 import Worker from '../models/Worker';
 import { sendResponse } from '../utils/responseHandler';
 
+import User from '../models/User';
+
 // @desc    Get all workers
 // @route   GET /api/v1/workers
 export const getWorkers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, skill, page = '1', limit = '10' } = req.query;
+    const { search, status, skill, page = '1', limit = '10' } = req.query;
 
     const query: any = {};
     if (status) query.verificationStatus = status;
     if (skill) query.skills = { $in: [skill] };
+
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { name: { $regex: search as string, $options: 'i' } },
+          { phoneNumber: { $regex: search as string, $options: 'i' } }
+        ]
+      }).select('_id');
+      query.user = { $in: users.map(u => u._id) };
+    }
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);

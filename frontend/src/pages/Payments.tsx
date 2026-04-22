@@ -1,9 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 import { StatCard } from '../components/common/StatCard';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Search, Calendar, CreditCard, ChevronLeft, ChevronRight, XCircle, CheckCircle2, RefreshCcw, Wallet } from 'lucide-react';
 
 export const Payments = () => {
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const fetchPayments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res: any = await api.get(`/payments?page=${page}&limit=5&search=${search}`);
+      const data = res.data || res;
+      setPayments(data.payments || (Array.isArray(data) ? data : []));
+      setTotalPages(data.pagination?.totalPages || data.totalPages || 1);
+    } catch (err) {
+      console.warn('Failed to fetch payments');
+      setPayments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchPayments(), 300);
+    return () => clearTimeout(timer);
+  }, [fetchPayments]);
   const chartData = [
     { name: '21 Apr', Earnings: 0, Payout: 0 },
     { name: '22 Apr', Earnings: 2000, Payout: 1000 },
@@ -45,7 +71,13 @@ export const Payments = () => {
           </select>
           <div className="relative w-full md:w-[200px]">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" placeholder="Search here" className="w-full pl-4 pr-9 py-2 border border-border rounded-lg text-[13px] outline-none" />
+            <input 
+              type="text" 
+              placeholder="Search here" 
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full pl-4 pr-9 py-2 border border-border rounded-lg text-[13px] outline-none" 
+            />
           </div>
           <button className="bg-[#1496A3] text-white font-bold text-[13px] px-6 py-2 rounded-lg hover:bg-teal-700 transition shrink-0">
             Apply Filter
@@ -148,27 +180,22 @@ export const Payments = () => {
                   </tr>
                 </thead>
                 <tbody className="text-[12px]">
-                  {[1,2,3,4,5].map(item => {
-                    const data = [
-                      {id: '#BK8455', name: 'Bunty Kumar', img: '1', job: 'Room Cleaning', amt: '1,450', date: '26 Apr 2024'},
-                      {id: '#BK8124', name: 'Ravi Verma',  img: '2', job: 'House Cleaning', amt: '1,950', date: '25 Apr 2024'},
-                      {id: '#BK7854', name: 'Robert Linton', img: '3', job: 'Plumbing Repair', amt: '2,800', date: '25 Apr 2024'},
-                      {id: '#BK9945', name: 'Sarah Linton', img: '4', job: 'Electrical Repair', amt: '2,320', date: '24 Apr 2024'},
-                      {id: '#BK7212', name: 'Shivansh cleanser', img: '5', job: 'Appilance Fixing', amt: '930', date: '23 Apr 2024'},
-                    ][item - 1];
+                  {payments && payments.length > 0 ? payments.map((item, index) => {
                     return (
-                      <tr key={item} className="border-b border-gray-50 last:border-0">
-                        <td className="py-4 px-2 font-bold text-[#0EA5A4]">{data.id}</td>
+                      <tr key={item._id || index} className="border-b border-gray-50 last:border-0">
+                        <td className="py-4 px-2 font-bold text-[#0EA5A4]">{item.paymentId || 'PAY-NA'}</td>
                         <td className="py-4 px-2 flex items-center gap-2">
-                           <img src={`https://i.pravatar.cc/150?img=${data.img}`} className="w-6 h-6 rounded-full object-cover" />
-                           <span className="text-[#111827] font-medium">{data.name}</span>
+                           <img src={item.user?.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 1}`} className="w-6 h-6 rounded-full object-cover" />
+                           <span className="text-[#111827] font-medium">{item.user?.name || 'Unknown'}</span>
                         </td>
-                        <td className="py-4 px-2 text-[#6B7280]">{data.job}</td>
-                        <td className="py-4 px-2 font-extrabold text-[#111827]">₹ {data.amt}</td>
-                        <td className="py-4 px-2 text-[#6B7280]">{data.date}</td>
+                        <td className="py-4 px-2 text-[#6B7280]">Service Job</td>
+                        <td className="py-4 px-2 font-extrabold text-[#111827]">₹ {item.amount || 0}</td>
+                        <td className="py-4 px-2 text-[#6B7280]">{new Date(item.createdAt || Date.now()).toLocaleDateString()}</td>
                       </tr>
                     );
-                  })}
+                  }) : (
+                    <tr><td colSpan={5} className="py-4 text-center text-gray-500">No transactions found</td></tr>
+                  )}
                 </tbody>
              </table>
            </div>
@@ -192,59 +219,64 @@ export const Payments = () => {
                   </tr>
                 </thead>
                 <tbody className="text-[12px]">
-                  {[1,2,3,4,5].map(item => {
-                    const data = [
-                      {name: 'Burty Kumar', img: '1', amt: '12,300', payTo: 'Pro 4321', icon: 'VISA', methodText: 'Setup Method', methodColor: 'text-[#1E7145]', mIcon: '✅', date: 'Paid'},
-                      {name: 'Ravi Verma',  img: '2', amt: '9,800', payTo: 'Pro 4321', icon: 'VISA', methodText: 'Setup Method', methodColor: 'text-[#1E7145]', mIcon: '✅', date: 'Paid'},
-                      {name: 'Robert Linton', img: '3', amt: '9,500', payTo: 'PayPal', icon: 'P', methodText: 'Total Monthly', methodColor: 'text-[#1A73E8]', mIcon: 'P', date: 'Paid'},
-                      {name: 'Sarah Linton', img: '4', amt: '7,900', payTo: 'PayPal', icon: 'P', methodText: 'Total Monthly', methodColor: 'text-[#1A73E8]', mIcon: 'P', date: 'Paid'},
-                      {name: 'Shivansh cleanser', img: '5', amt: '7,800', payTo: '', icon: '', methodText: '', methodColor: '', mIcon: '', date: 'Paid'},
-                    ][item - 1];
+                  {payments && payments.length > 0 ? payments.map((item, index) => {
                     return (
-                      <tr key={item} className="border-b border-gray-50 last:border-0">
+                      <tr key={item._id || index} className="border-b border-gray-50 last:border-0">
                         <td className="py-3 px-2 flex items-center gap-2">
-                           <img src={`https://i.pravatar.cc/150?img=${data.img}`} className="w-6 h-6 rounded-full object-cover" />
-                           <span className="text-[#111827] font-medium text-[11px] max-w-[100px] truncate">{data.name}</span>
+                           <img src={item.user?.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 10}`} className="w-6 h-6 rounded-full object-cover" />
+                           <span className="text-[#111827] font-medium text-[11px] max-w-[100px] truncate">{item.user?.name || 'Unknown'}</span>
                         </td>
-                        <td className="py-3 px-2 font-extrabold text-[#0EA5A4] text-[11px]">₹ {data.amt}</td>
+                        <td className="py-3 px-2 font-extrabold text-[#0EA5A4] text-[11px]">₹ {item.amount || 0}</td>
                         <td className="py-3 px-2">
-                          {data.payTo && (
                             <div className="flex items-center gap-1 font-bold text-blue-900 text-[10px]">
-                              {data.icon === 'VISA' ? <span className="bg-blue-900 text-white px-1 text-[8px] rounded">VISA</span> : <span className="text-blue-500 italic">P</span>}
-                              {data.icon === 'VISA' ? '4321' : 'PayPal'}
+                              {item.method === 'Card' ? <span className="bg-blue-900 text-white px-1 text-[8px] rounded">VISA</span> : <span className="text-blue-500 italic">P</span>}
+                              {item.method === 'Card' ? '4321' : 'PayPal'}
                             </div>
-                          )}
                         </td>
                         <td className="py-3 px-2">
-                          {data.methodText && (
                             <div className="flex flex-col">
-                              <span className={`font-bold text-[9px] ${data.methodColor}`}>{data.payTo}</span>
-                              <span className="text-[8px] text-gray-400">{data.methodText}</span>
+                              <span className={`font-bold text-[9px] text-[#1A73E8]`}>{item.method || 'Card'}</span>
+                              <span className="text-[8px] text-gray-400">Paid Method</span>
                             </div>
-                          )}
                         </td>
                         <td className="py-3 px-2">
-                           <span className="text-[#1E7145] bg-[#E1F7E3] px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 w-max">
-                             {data.date} <span className="text-gray-400">↗</span>
+                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 w-max ${item.status === 'Completed' ? 'text-[#1E7145] bg-[#E1F7E3]' : 'text-yellow-700 bg-yellow-100'}`}>
+                             {item.status || 'Paid'} {item.status === 'Completed' && <span className="text-gray-400">↗</span>}
                            </span>
                         </td>
                       </tr>
                     );
-                  })}
+                  }) : (
+                    <tr><td colSpan={5} className="py-4 text-center text-gray-500">No payouts found</td></tr>
+                  )}
                 </tbody>
              </table>
            </div>
 
            <div className="flex justify-between items-center mt-4">
              <div className="flex items-center gap-1">
-               <button className="w-6 h-6 rounded border border-border flex items-center justify-center text-gray-400 text-xs hover:bg-gray-50">‹</button>
-               <button className="w-6 h-6 rounded border border-border flex items-center justify-center text-[#111827] text-xs font-bold bg-gray-50">1</button>
-               <button className="w-6 h-6 rounded border border-border flex items-center justify-center text-[#111827] text-xs hover:bg-gray-50 drop-shadow-sm">2</button>
-               <button className="w-6 h-6 rounded border border-border flex items-center justify-center text-[#111827] text-xs hover:bg-gray-50 drop-shadow-sm">›</button>
-               <button className="w-6 h-6 rounded border border-border flex items-center justify-center text-[#111827] text-xs hover:bg-gray-50 drop-shadow-sm">»</button>
+               <button 
+                 onClick={() => setPage(p => Math.max(1, p - 1))}
+                 disabled={page === 1}
+                 className="w-6 h-6 rounded border border-border flex items-center justify-center text-gray-400 text-xs hover:bg-gray-50 disabled:opacity-50">‹</button>
+               
+               {[...Array(totalPages)].map((_, i) => (
+                 <button 
+                   key={i}
+                   onClick={() => setPage(i + 1)}
+                   className={`w-6 h-6 rounded border border-border flex items-center justify-center text-xs transition ${page === i + 1 ? 'bg-gray-50 font-bold text-[#111827]' : 'text-gray-400 hover:bg-gray-50'}`}
+                 >
+                   {i + 1}
+                 </button>
+               ))}
+
+               <button 
+                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                 disabled={page === totalPages || totalPages === 0}
+                 className="w-6 h-6 rounded border border-border flex items-center justify-center text-[#111827] text-xs hover:bg-gray-50 drop-shadow-sm disabled:opacity-50">›</button>
              </div>
              <div className="text-[10px] text-gray-400 flex items-center gap-1">
-               Page 1 of 8 <span className="text-gray-300">›</span>
+               Page {page} of {totalPages}
              </div>
            </div>
         </div>

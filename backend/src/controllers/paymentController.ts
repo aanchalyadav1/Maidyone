@@ -9,11 +9,14 @@ import { sendResponse } from '../utils/responseHandler';
 // @route   GET /api/v1/payments
 export const getPayments = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, method, page = '1', limit = '10' } = req.query;
+    const { search, status, method, page = '1', limit = '10' } = req.query;
 
     const query: any = {};
     if (status) query.status = status;
     if (method) query.method = method;
+    if (search) {
+      query.paymentId = { $regex: search as string, $options: 'i' };
+    }
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
