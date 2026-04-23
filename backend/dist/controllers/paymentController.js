@@ -16,17 +16,21 @@ exports.recordPayment = exports.getPayments = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const Payment_1 = __importDefault(require("../models/Payment"));
 const Booking_1 = __importDefault(require("../models/Booking"));
+const Notification_1 = __importDefault(require("../models/Notification"));
 const responseHandler_1 = require("../utils/responseHandler");
 // @desc    Fetch transactions
 // @route   GET /api/v1/payments
 const getPayments = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { status, method, page = '1', limit = '10' } = req.query;
+        const { search, status, method, page = '1', limit = '10' } = req.query;
         const query = {};
         if (status)
             query.status = status;
         if (method)
             query.method = method;
+        if (search) {
+            query.paymentId = { $regex: search, $options: 'i' };
+        }
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const startIndex = (pageNum - 1) * limitNum;
@@ -81,6 +85,14 @@ const recordPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             booking.status = 'Confirmed';
             yield booking.save({ session });
         }
+        // Auto-trigger notification
+        yield Notification_1.default.create([{
+                recipient: booking.user,
+                title: `Payment ${status}`,
+                message: `Your payment of ${amount} for booking ${booking.bookingId} has been marked as ${status}.`,
+                type: 'Payment',
+                relatedId: uniquePayId
+            }], { session });
         yield session.commitTransaction();
         session.endSession();
         (0, responseHandler_1.sendResponse)(res, 201, true, 'Payment recorded successfully', savedPayment);

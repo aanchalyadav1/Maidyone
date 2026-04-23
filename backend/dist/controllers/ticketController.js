@@ -14,15 +14,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateTicketStatus = exports.createTicket = exports.getTicketById = exports.getTickets = void 0;
 const Ticket_1 = __importDefault(require("../models/Ticket"));
+const Notification_1 = __importDefault(require("../models/Notification"));
 const responseHandler_1 = require("../utils/responseHandler");
 const getTickets = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { status, priority, page = '1', limit = '10' } = req.query;
+        const { search, status, priority, page = '1', limit = '10' } = req.query;
         const query = {};
         if (status)
             query.status = status;
         if (priority)
             query.priority = priority;
+        if (search) {
+            query.$or = [
+                { ticketId: { $regex: search, $options: 'i' } },
+                { subject: { $regex: search, $options: 'i' } }
+            ];
+        }
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const startIndex = (pageNum - 1) * limitNum;
@@ -71,6 +78,14 @@ const createTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             description,
             priority: priority || 'Medium'
         });
+        // Auto-trigger notification
+        yield Notification_1.default.create({
+            recipient: userId,
+            title: 'Ticket Created',
+            message: `Your ticket ${tId} has been opened currently pending review.`,
+            type: 'Ticket',
+            relatedId: tId
+        });
         (0, responseHandler_1.sendResponse)(res, 201, true, 'Ticket created', newTicket);
     }
     catch (error) {
@@ -89,6 +104,16 @@ const updateTicketStatus = (req, res, next) => __awaiter(void 0, void 0, void 0,
         const ticket = yield Ticket_1.default.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
         if (!ticket)
             return (0, responseHandler_1.sendResponse)(res, 404, false, 'Ticket not found');
+        // Auto-trigger notification if status changed
+        if (status) {
+            yield Notification_1.default.create({
+                recipient: ticket.user,
+                title: `Ticket ${status}`,
+                message: `Your ticket ${ticket.ticketId} status has been updated to ${status}.`,
+                type: 'Ticket',
+                relatedId: ticket.ticketId
+            });
+        }
         (0, responseHandler_1.sendResponse)(res, 200, true, 'Ticket updated', ticket);
     }
     catch (error) {

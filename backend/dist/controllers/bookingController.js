@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.assignWorker = exports.updateBookingStatus = exports.createBooking = exports.getBookingById = exports.getBookings = void 0;
 const Booking_1 = __importDefault(require("../models/Booking"));
+const Notification_1 = __importDefault(require("../models/Notification"));
 const responseHandler_1 = require("../utils/responseHandler");
 // @desc    Get all bookings (with filters, search, pagination)
 // @route   GET /api/v1/bookings
@@ -106,6 +107,14 @@ const createBooking = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         const newBooking = new Booking_1.default(Object.assign(Object.assign({}, allowedPayload), { bookingId, date: new Date(), status: 'Pending', user: req.user._id // Automatically extracted from token/middleware
          }));
         const savedBooking = yield newBooking.save();
+        // Auto-trigger notification
+        yield Notification_1.default.create({
+            recipient: savedBooking.user,
+            title: 'Booking Created',
+            message: `Your booking ${savedBooking.bookingId} has been created and is pending confirmation.`,
+            type: 'Booking',
+            relatedId: savedBooking.bookingId
+        });
         (0, responseHandler_1.sendResponse)(res, 201, true, 'Booking created successfully', savedBooking);
     }
     catch (error) {
@@ -126,6 +135,14 @@ const updateBookingStatus = (req, res, next) => __awaiter(void 0, void 0, void 0
         if (!booking) {
             return (0, responseHandler_1.sendResponse)(res, 404, false, 'Booking not found');
         }
+        // Auto-trigger notification
+        yield Notification_1.default.create({
+            recipient: booking.user,
+            title: `Booking ${status}`,
+            message: `Your booking ${booking.bookingId} status has been updated to ${status}.`,
+            type: 'Booking',
+            relatedId: booking.bookingId
+        });
         (0, responseHandler_1.sendResponse)(res, 200, true, 'Booking status updated', booking);
     }
     catch (error) {
@@ -145,6 +162,14 @@ const assignWorker = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         if (!booking) {
             return (0, responseHandler_1.sendResponse)(res, 404, false, 'Booking not found');
         }
+        // Auto-trigger notification
+        yield Notification_1.default.create({
+            recipient: booking.user,
+            title: `Worker Assigned`,
+            message: `A worker has been assigned to your booking ${booking.bookingId}. Status is now Confirmed.`,
+            type: 'Booking',
+            relatedId: booking.bookingId
+        });
         (0, responseHandler_1.sendResponse)(res, 200, true, 'Worker assigned successfully', booking);
     }
     catch (error) {

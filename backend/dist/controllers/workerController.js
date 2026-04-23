@@ -15,16 +15,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateWorker = exports.createWorker = exports.getWorkers = void 0;
 const Worker_1 = __importDefault(require("../models/Worker"));
 const responseHandler_1 = require("../utils/responseHandler");
+const User_1 = __importDefault(require("../models/User"));
 // @desc    Get all workers
 // @route   GET /api/v1/workers
 const getWorkers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { status, skill, page = '1', limit = '10' } = req.query;
+        const { search, status, skill, page = '1', limit = '10' } = req.query;
         const query = {};
         if (status)
             query.verificationStatus = status;
         if (skill)
             query.skills = { $in: [skill] };
+        if (search) {
+            const users = yield User_1.default.find({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { phoneNumber: { $regex: search, $options: 'i' } }
+                ]
+            }).select('_id');
+            query.user = { $in: users.map(u => u._id) };
+        }
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const startIndex = (pageNum - 1) * limitNum;
