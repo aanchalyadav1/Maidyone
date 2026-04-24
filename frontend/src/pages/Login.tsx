@@ -16,17 +16,22 @@ export const Login = () => {
     e.preventDefault();
 
     try {
-      const res: any = await api.post("/auth/login", {
-        phone,
-        password,
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, password })
       });
 
-      const data = res;
+      const data = await response.json();
 
-      if (!data || !data.data) {
+      if (!response.ok || !data || !data.data) {
         alert(data?.message || "Login failed");
         return;
       }
+
+      // Save token in localStorage
+      localStorage.setItem("token", data.data.token);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
 
       // ✅ IMPORTANT: your backend uses sendResponse → data.data
       dispatch(

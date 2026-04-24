@@ -47,7 +47,7 @@ export const Bookings = () => {
         params: { page, limit: 10, search: debouncedSearch }
       });
       setBookings(res.data?.bookings || []);
-      setTotalPages(res.data?.pagination?.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || res.data?.pagination?.totalPages || 1);
     } catch (err: any) {
       setError("Failed to fetch bookings.");
       setBookings([]);

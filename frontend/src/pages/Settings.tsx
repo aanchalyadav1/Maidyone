@@ -90,15 +90,9 @@ export const Settings = () => {
                   </tr>
                 </thead>
                 <tbody className="text-[12px]">
-                  {[1, 2, 3, 4].map((item) => {
-                    const data = [
-                      { id: '#BK3455', worker: 'Bunty Kumar', img: '1', job: 'Room Cleaning', amt: '1,450', stat: 'Paid', date: '26 Apr 2024', statColor: 'text-[#1E7145] bg-[#E1F7E3]' },
-                      { id: '#BK3124', worker: 'Rovr Verma', img: '2', job: 'House Cleaning', amt: '1,950', stat: 'Paid', date: '25 Apr 2024', statColor: 'text-[#1E7145] bg-[#E1F7E3]' },
-                      { id: '#BK7654', worker: 'Robert Linten', img: '3', job: 'Plumbing Repair', amt: '2,800', stat: 'Pending', date: '25 Apr 2024', statColor: 'text-white bg-[#0EA5A4]' },
-                      { id: '#BK8345', worker: 'Serah Linten', img: '4', job: 'Electrical Repair', amt: '2,320', stat: 'Paid', date: '24 Apr 2024', statColor: 'text-[#1E7145] bg-[#E1F7E3]' },
-                    ][item - 1];
+                  {[]?.map((data: any, index: number) => {
                     return (
-                      <tr key={item} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition">
+                      <tr key={index} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition">
                         <td className="py-4 px-4 font-bold text-[#0EA5A4]">{data.id}</td>
                         <td className="py-4 px-4 flex items-center gap-3">
                            <img src={`https://i.pravatar.cc/150?img=${data.img}`} className="w-8 h-8 rounded-full object-cover" />
@@ -113,6 +107,7 @@ export const Settings = () => {
                       </tr>
                     );
                   })}
+                  <tr><td colSpan={6} className="text-center py-4 text-gray-500 text-sm">No transactions found</td></tr>
                 </tbody>
               </table>
             </div>

@@ -67,7 +67,7 @@ export const Dashboard = () => {
             res.data.cityStats.map((c: any) => ({
               city: c.city,
               bookings: c.bookings,
-              percent: Math.min((c.bookings / (res.data.stats.totalBookings || 1)) * 100, 100),
+              percent: Math.min((c.bookings / (res.data?.stats?.totalBookings || 1)) * 100, 100),
               trend: 'Live'
             })) : INITIAL_DATA.cityStats,
           recentBookings: res.data?.recentBookings || [],
@@ -89,18 +89,18 @@ export const Dashboard = () => {
     <div className="space-y-6">
       {/* 2 Rows of 5 Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard title="Total Booking" value={data.stats.totalBookings.toLocaleString()} trend="12.5%" trendUp={true} icon={FileText} iconColor="bg-blue-50 text-blue-500" />
-        <StatCard title="Panding Booking" value={data.stats.pendingBookings.toLocaleString()} trend="12.5%" trendUp={true} icon={Clock} iconColor="bg-teal-50 text-teal-500" />
-        <StatCard title="Ongoing Booking" value={data.stats.ongoingBookings.toLocaleString()} trend="5.9%" trendUp={true} icon={Component} iconColor="bg-yellow-50 text-yellow-500" />
-        <StatCard title="Completed Booking" value={data.stats.completedBookings.toLocaleString()} trend="7.26%" trendUp={true} icon={CheckCircle} iconColor="bg-green-50 text-green-500" />
-        <StatCard title="Cancelled Booking" value={data.stats.cancelledBookings.toLocaleString()} trend="2.5%" trendUp={false} icon={XCircle} iconColor="bg-red-50 text-red-500" />
+        <StatCard title="Total Booking" value={(data.stats.totalBookings || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={FileText} iconColor="bg-blue-50 text-blue-500" />
+        <StatCard title="Panding Booking" value={(data.stats.pendingBookings || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Clock} iconColor="bg-teal-50 text-teal-500" />
+        <StatCard title="Ongoing Booking" value={(data.stats.ongoingBookings || 0).toLocaleString()} trend="5.9%" trendUp={true} icon={Component} iconColor="bg-yellow-50 text-yellow-500" />
+        <StatCard title="Completed Booking" value={(data.stats.completedBookings || 0).toLocaleString()} trend="7.26%" trendUp={true} icon={CheckCircle} iconColor="bg-green-50 text-green-500" />
+        <StatCard title="Cancelled Booking" value={(data.stats.cancelledBookings || 0).toLocaleString()} trend="2.5%" trendUp={false} icon={XCircle} iconColor="bg-red-50 text-red-500" />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard title="Total Users" value={data.stats.totalUsers.toLocaleString()} trend="12.5%" trendUp={true} icon={Users} iconColor="bg-[#E0F2F1] text-[#00897B]" />
-        <StatCard title="Total Workers" value={data.stats.totalWorkers.toLocaleString()} trend="12.5%" trendUp={true} icon={Briefcase} iconColor="bg-[#FCE4EC] text-[#D81B60]" />
-        <StatCard title="Panding Verification" value={data.stats.pendingVerification.toLocaleString()} trend="5.9%" trendUp={true} icon={ShieldAlert} iconColor="bg-[#E8EAF6] text-[#3F51B5]" />
-        <StatCard title="Today's Revenue" value={data.stats.todayRevenue.toLocaleString()} trend="7.26%" trendUp={true} icon={BadgeDollarSign} iconColor="bg-[#E0F7FA] text-[#00BCD4]" />
-        <StatCard title="Total Revenue" value={data.stats.totalRevenue.toLocaleString()} trend="2.5%" trendUp={false} icon={Wallet} iconColor="bg-[#E8F5E9] text-[#4CAF50]" />
+        <StatCard title="Total Users" value={(data.stats.totalUsers || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Users} iconColor="bg-[#E0F2F1] text-[#00897B]" />
+        <StatCard title="Total Workers" value={(data.stats.totalWorkers || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Briefcase} iconColor="bg-[#FCE4EC] text-[#D81B60]" />
+        <StatCard title="Panding Verification" value={(data.stats.pendingVerification || 0).toLocaleString()} trend="5.9%" trendUp={true} icon={ShieldAlert} iconColor="bg-[#E8EAF6] text-[#3F51B5]" />
+        <StatCard title="Today's Revenue" value={(data.stats.todayRevenue || 0).toLocaleString()} trend="7.26%" trendUp={true} icon={BadgeDollarSign} iconColor="bg-[#E0F7FA] text-[#00BCD4]" />
+        <StatCard title="Total Revenue" value={(data.stats.totalRevenue || 0).toLocaleString()} trend="2.5%" trendUp={false} icon={Wallet} iconColor="bg-[#E8F5E9] text-[#4CAF50]" />
       </div>
 
       {/* Charts & Actions Row */}
@@ -119,7 +119,7 @@ export const Dashboard = () => {
              <div>
                <h3 className="font-bold text-[15px] mb-1">Revenue Overview</h3>
                <div className="flex items-center gap-2">
-                 <span className="text-xl font-bold text-primary">₹{data.stats.totalRevenue.toLocaleString()}</span>
+                 <span className="text-xl font-bold text-primary">₹{(data.stats.totalRevenue || 0).toLocaleString()}</span>
                  <span className="text-[10px] bg-[#E1F7E3] text-[#1E7145] px-2 py-[2px] rounded font-bold">+ Live</span>
                  <span className="text-[10px] text-gray-400">vs last period</span>
                </div>

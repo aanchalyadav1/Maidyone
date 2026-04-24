@@ -16,7 +16,7 @@ export const Tickets = () => {
       const res: any = await api.get(`/tickets?page=${page}&limit=10&search=${search}`);
       const data = res.data || res;
       setTickets(data.tickets || (Array.isArray(data) ? data : []));
-      setTotalPages(data.pagination?.totalPages || data.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || data.pagination?.totalPages || data.totalPages || 1);
     } catch (err) {
       console.warn('Failed to fetch tickets');
       setTickets([]);

@@ -17,7 +17,7 @@ export const Payments = () => {
       const res: any = await api.get(`/payments?page=${page}&limit=5&search=${search}`);
       const data = res.data || res;
       setPayments(data.payments || (Array.isArray(data) ? data : []));
-      setTotalPages(data.pagination?.totalPages || data.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || data.pagination?.totalPages || data.totalPages || 1);
     } catch (err) {
       console.warn('Failed to fetch payments');
       setPayments([]);

@@ -17,7 +17,7 @@ export const Users = () => {
       const res: any = await api.get(`/users?page=${page}&limit=${limit}&search=${search}`);
       const data = res.data || res;
       setUsers(data.users || (Array.isArray(data) ? data : []));
-      setTotalPages(data.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || data.totalPages || 1);
     } catch (err) {
       console.warn('Failed to fetch users');
       setUsers([]);

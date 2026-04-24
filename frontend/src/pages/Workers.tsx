@@ -17,7 +17,7 @@ export const Workers = () => {
       const res: any = await api.get(`/workers?page=${page}&limit=${limit}&search=${search}`);
       const data = res.data || res;
       setWorkers(data.workers || (Array.isArray(data) ? data : []));
-      setTotalPages(data.pagination?.totalPages || data.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || data.pagination?.totalPages || data.totalPages || 1);
     } catch (err) {
       console.warn('Failed to fetch workers');
       setWorkers([]);

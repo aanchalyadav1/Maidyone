@@ -15,11 +15,14 @@ interface AuthState {
   loading: boolean;
 }
 
+const storedToken = localStorage.getItem('token');
+const storedUser = localStorage.getItem('user');
+
 const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  loading: true,
+  user: storedUser ? JSON.parse(storedUser) : null,
+  token: storedToken,
+  isAuthenticated: !!storedToken,
+  loading: false,
 };
 
 const authSlice = createSlice({
@@ -36,6 +39,8 @@ const authSlice = createSlice({
       state.loading = false;
     },
     logout: (state) => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
