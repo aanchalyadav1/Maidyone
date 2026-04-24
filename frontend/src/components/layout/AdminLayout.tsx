@@ -48,7 +48,7 @@ export const AdminLayout = () => {
         </div>
 
         {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-8 py-8 custom-scrollbar relative z-20">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 custom-scrollbar relative z-20">
           <Outlet />
         </main>
       </div>

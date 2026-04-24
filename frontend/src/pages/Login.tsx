@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setCredentials } from "../features/auth/authSlice";
 import { Lock, Phone } from "lucide-react";
+import api from "../services/api";
 
 export const Login = () => {
   const [phone, setPhone] = useState("");
@@ -15,21 +16,15 @@ export const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone,
-          password,
-        }),
+      const res: any = await api.post("/auth/login", {
+        phone,
+        password,
       });
 
-      const data = await res.json();
+      const data = res;
 
-      if (!res.ok) {
-        alert(data.message || "Login failed");
+      if (!data || !data.data) {
+        alert(data?.message || "Login failed");
         return;
       }
 
@@ -76,8 +71,8 @@ export const Login = () => {
       <div
         className="relative z-10 w-[420px] h-[520px] rounded-[28px] px-8 
         flex flex-col items-center justify-center
-        bg-gradient-to-br from-[#6EC6BD]/95 to-[#DDEFEF]/95
-        backdrop-blur-md border border-white/30
+        bg-white/20
+        backdrop-blur-2xl border border-white/30
         shadow-[0_10px_40px_rgba(0,0,0,0.15)]"
       >
 
