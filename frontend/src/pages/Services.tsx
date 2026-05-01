@@ -40,7 +40,7 @@ export const Services = () => {
           <h2 className="text-[20px] font-bold text-[#111827]">Services list</h2>
           <span className="text-[#6B7280] text-[12px]">Manage and view your services!</span>
         </div>
-        <button className="flex items-center gap-2 bg-[#1496A3] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-teal-700 transition shadow-sm">
+        <button className="flex items-center gap-2 bg-[#1496A3] text-white px-5 py-2.5 min-h-[44px] rounded-xl text-[13px] font-bold hover:bg-teal-700 transition shadow-sm">
           <Plus className="w-[18px] h-[18px]" /> Add Service
         </button>
       </div>
@@ -71,14 +71,14 @@ export const Services = () => {
         {loading ? (
           <div className="py-2"><TableSkeleton columns={5} rows={6} /></div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[#6B7280] text-[12px] font-medium tracking-wide">
                   <th className="pb-4 font-bold px-4">Service Name</th>
-                  <th className="pb-4 font-bold px-4">Category</th>
+                  <th className="pb-4 font-bold px-4 hidden sm:table-cell">Category</th>
                   <th className="pb-4 font-bold px-4">Base Price</th>
-                  <th className="pb-4 font-bold px-4">Status</th>
+                  <th className="pb-4 font-bold px-4 hidden md:table-cell">Status</th>
                   <th className="pb-4 font-bold px-4 text-center">Action</th>
                 </tr>
               </thead>
@@ -95,19 +95,19 @@ export const Services = () => {
                           <span className="text-[#6B7280] text-[11px]">ID: #{service._id ? service._id.slice(-6).toUpperCase() : `SRV2${index}4`}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-[13px] font-medium text-[#111827]">{service.category || "General"}</td>
+                      <td className="py-3 px-4 text-[13px] font-medium text-[#111827] hidden sm:table-cell">{service.category || "General"}</td>
                       <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹{service.basePrice || service.price || 0}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 hidden md:table-cell">
                         <span className={`px-3 py-1 rounded text-[11px] font-bold ${service.isActive !== false ? 'bg-[#E1F7E3] text-[#1E7145]' : 'bg-[#FEE2E2] text-[#DC2626]'}`}>
                           {service.isActive !== false ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                           <button className="flex items-center justify-center gap-1 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-white shadow-sm">
+                           <button className="flex items-center justify-center gap-1 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-4 py-2 min-h-[44px] rounded-lg text-[11px] font-bold hover:bg-white shadow-sm">
                              <Edit className="w-3.5 h-3.5 text-[#0EA5A4]" /> Edit
                            </button>
-                           <button className="flex items-center justify-center bg-[#FAFAFA] border border-red-100 px-2 py-1.5 rounded-lg text-red-500 hover:bg-red-50 transition shadow-sm">
+                           <button className="flex items-center justify-center bg-[#FAFAFA] border border-red-100 px-4 py-2 min-h-[44px] rounded-lg text-red-500 hover:bg-red-50 transition shadow-sm">
                              <Trash2 className="w-4 h-4" />
                            </button>
                         </div>

@@ -46,7 +46,7 @@ export const Payments = () => {
     <div className="space-y-6">
       
       {/* 5 Top Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard title="Total Earnings" value="₹80,450" trend="2.3%" trendUp={true} icon={Wallet} iconColor="bg-blue-50 text-blue-500" />
         <StatCard title="Pending Payout" value="₹72,480" trend="2.5%" trendUp={true} icon={RefreshCcw} iconColor="bg-teal-50 text-teal-500" />
         <StatCard title="Ongoing Payout" value="₹72,480" trend="2.5%" trendUp={true} icon={RefreshCcw} iconColor="bg-yellow-50 text-yellow-500" />
@@ -79,7 +79,7 @@ export const Payments = () => {
               className="w-full pl-4 pr-9 py-2 border border-border rounded-lg text-[13px] outline-none" 
             />
           </div>
-          <button className="bg-[#1496A3] text-white font-bold text-[13px] px-6 py-2 rounded-lg hover:bg-teal-700 transition shrink-0">
+          <button className="bg-[#1496A3] text-white font-bold text-[13px] px-6 py-2 min-h-[44px] rounded-lg hover:bg-teal-700 transition shrink-0">
             Apply Filter
           </button>
         </div>
@@ -152,7 +152,7 @@ export const Payments = () => {
              </div>
            </div>
 
-           <button className="w-full mt-6 bg-[#6CC8C6] text-white font-bold text-[14px] py-3.5 rounded-[12px] hover:bg-teal-500 transition shadow-sm">
+           <button className="w-full mt-6 bg-[#6CC8C6] text-white font-bold text-[14px] py-3.5 min-h-[44px] rounded-[12px] hover:bg-teal-500 transition shadow-sm">
              Withdraw Funds
            </button>
         </div>
@@ -168,15 +168,15 @@ export const Payments = () => {
              <button className="text-[11px] bg-gray-50 border border-border px-3 py-1.5 rounded text-[#6B7280]">This Week</button>
            </div>
            
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
+           <div className="overflow-x-auto w-full">
+             <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="text-[11px] text-[#6B7280] font-medium border-b border-gray-50 uppercase tracking-wide">
                     <th className="py-4 px-2">Booking ID</th>
                     <th className="py-4 px-2">Worker</th>
-                    <th className="py-4 px-2">Job</th>
+                    <th className="py-4 px-2 hidden sm:table-cell">Job</th>
                     <th className="py-4 px-2">Amount</th>
-                    <th className="py-4 px-2">Date</th>
+                    <th className="py-4 px-2 hidden md:table-cell">Date</th>
                   </tr>
                 </thead>
                 <tbody className="text-[12px]">
@@ -186,11 +186,11 @@ export const Payments = () => {
                         <td className="py-4 px-2 font-bold text-[#0EA5A4]">{item.paymentId || 'PAY-NA'}</td>
                         <td className="py-4 px-2 flex items-center gap-2">
                            <img src={item.user?.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 1}`} className="w-6 h-6 rounded-full object-cover" />
-                           <span className="text-[#111827] font-medium">{item.user?.name || 'Unknown'}</span>
+                           <span className="text-[#111827] font-medium truncate max-w-[100px]">{item.user?.name || 'Unknown'}</span>
                         </td>
-                        <td className="py-4 px-2 text-[#6B7280]">Service Job</td>
+                        <td className="py-4 px-2 text-[#6B7280] hidden sm:table-cell">Service Job</td>
                         <td className="py-4 px-2 font-extrabold text-[#111827]">₹ {item.amount || 0}</td>
-                        <td className="py-4 px-2 text-[#6B7280]">{new Date(item.createdAt || Date.now()).toLocaleDateString()}</td>
+                        <td className="py-4 px-2 text-[#6B7280] hidden md:table-cell">{new Date(item.createdAt || Date.now()).toLocaleDateString()}</td>
                       </tr>
                     );
                   }) : (
@@ -207,14 +207,14 @@ export const Payments = () => {
              <h3 className="font-bold text-[15px] text-[#111827]">Recent Payouts</h3>
            </div>
            
-           <div className="overflow-x-auto flex-1">
-             <table className="w-full text-left border-collapse">
+           <div className="overflow-x-auto flex-1 w-full">
+             <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="text-[11px] text-[#6B7280] font-medium border-b border-gray-50 uppercase tracking-wide">
                     <th className="py-4 px-2">Worker</th>
                     <th className="py-4 px-2">Total Amount</th>
-                    <th className="py-4 px-2">Payout To</th>
-                    <th className="py-4 px-2">Payout Method</th>
+                    <th className="py-4 px-2 hidden sm:table-cell">Payout To</th>
+                    <th className="py-4 px-2 hidden md:table-cell">Payout Method</th>
                     <th className="py-4 px-2">Date</th>
                   </tr>
                 </thead>
@@ -227,13 +227,13 @@ export const Payments = () => {
                            <span className="text-[#111827] font-medium text-[11px] max-w-[100px] truncate">{item.user?.name || 'Unknown'}</span>
                         </td>
                         <td className="py-3 px-2 font-extrabold text-[#0EA5A4] text-[11px]">₹ {item.amount || 0}</td>
-                        <td className="py-3 px-2">
+                        <td className="py-3 px-2 hidden sm:table-cell">
                             <div className="flex items-center gap-1 font-bold text-blue-900 text-[10px]">
                               {item.method === 'Card' ? <span className="bg-blue-900 text-white px-1 text-[8px] rounded">VISA</span> : <span className="text-blue-500 italic">P</span>}
                               {item.method === 'Card' ? '4321' : 'PayPal'}
                             </div>
                         </td>
-                        <td className="py-3 px-2">
+                        <td className="py-3 px-2 hidden md:table-cell">
                             <div className="flex flex-col">
                               <span className={`font-bold text-[9px] text-[#1A73E8]`}>{item.method || 'Card'}</span>
                               <span className="text-[8px] text-gray-400">Paid Method</span>

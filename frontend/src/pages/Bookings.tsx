@@ -105,7 +105,7 @@ export const Bookings = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="bg-primary text-white text-[13px] font-bold px-6 py-[10px] rounded-lg hover:bg-primary-dark transition-colors">
+          <button className="bg-primary text-white text-[13px] font-bold px-6 py-[10px] min-h-[44px] rounded-lg hover:bg-primary-dark transition-colors">
             Apply Filter
           </button>
         </div>
@@ -116,15 +116,15 @@ export const Bookings = () => {
              <TableSkeleton columns={7} rows={6} />
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-[12px] border border-border">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
+          <div className="overflow-x-auto w-full rounded-[12px] border border-border">
+            <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
               <thead className="bg-[#E5E7EB]/50">
                 <tr className="text-text-primary text-[13px]">
                   <th className="py-4 px-6 font-bold">Booking ID</th>
                   <th className="py-4 px-6 font-bold">Guest Name</th>
                   <th className="py-4 px-6 font-bold">Service</th>
-                  <th className="py-4 px-6 font-bold">Date & Time</th>
-                  <th className="py-4 px-6 font-bold">Payment</th>
+                  <th className="py-4 px-6 font-bold hidden sm:table-cell">Date & Time</th>
+                  <th className="py-4 px-6 font-bold hidden md:table-cell">Payment</th>
                   <th className="py-4 px-6 font-bold">Status</th>
                   <th className="py-4 px-6 font-bold">Action</th>
                 </tr>
@@ -142,21 +142,21 @@ export const Bookings = () => {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <img src={booking.user?.avatar || `https://i.pravatar.cc/150?img=${idx % 70}`} alt="avatar" className="w-8 h-8 rounded-full border border-gray-200" />
-                        <span className="font-bold text-text-primary">{booking.user?.name || 'Unknown'}</span>
+                        <span className="font-bold text-text-primary truncate max-w-[120px]">{booking.user?.name || 'Unknown'}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 font-bold text-text-primary">{booking.service?.name}</td>
-                    <td className="py-4 px-6 font-bold text-text-primary">
+                    <td className="py-4 px-6 font-bold text-text-primary truncate max-w-[120px]">{booking.service?.name}</td>
+                    <td className="py-4 px-6 font-bold text-text-primary hidden sm:table-cell">
                       {format(new Date(booking.date), 'MMM, dd, yyyy | h:mm a')}
                     </td>
-                    <td className="py-4 px-6 font-bold text-text-primary">
+                    <td className="py-4 px-6 font-bold text-text-primary hidden md:table-cell">
                       {booking.paymentStatus || 'Paid'}
                     </td>
                     <td className="py-4 px-6">
                       {renderStatus(booking.status)}
                     </td>
                     <td className="py-4 px-6">
-                       <button className="flex items-center gap-2 text-[13px] border border-border text-text-primary font-bold px-4 py-[6px] rounded-lg hover:bg-gray-50 transition-colors shadow-sm bg-white">
+                       <button className="flex items-center gap-2 text-[13px] border border-border text-text-primary font-bold px-4 py-2 min-h-[44px] rounded-lg hover:bg-gray-50 transition-colors shadow-sm bg-white">
                          Edit 
                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                        </button>

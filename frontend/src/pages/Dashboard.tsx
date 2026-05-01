@@ -88,14 +88,14 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* 2 Rows of 5 Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard title="Total Booking" value={(data.stats.totalBookings || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={FileText} iconColor="bg-blue-50 text-blue-500" />
         <StatCard title="Panding Booking" value={(data.stats.pendingBookings || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Clock} iconColor="bg-teal-50 text-teal-500" />
         <StatCard title="Ongoing Booking" value={(data.stats.ongoingBookings || 0).toLocaleString()} trend="5.9%" trendUp={true} icon={Component} iconColor="bg-yellow-50 text-yellow-500" />
         <StatCard title="Completed Booking" value={(data.stats.completedBookings || 0).toLocaleString()} trend="7.26%" trendUp={true} icon={CheckCircle} iconColor="bg-green-50 text-green-500" />
         <StatCard title="Cancelled Booking" value={(data.stats.cancelledBookings || 0).toLocaleString()} trend="2.5%" trendUp={false} icon={XCircle} iconColor="bg-red-50 text-red-500" />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard title="Total Users" value={(data.stats.totalUsers || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Users} iconColor="bg-[#E0F2F1] text-[#00897B]" />
         <StatCard title="Total Workers" value={(data.stats.totalWorkers || 0).toLocaleString()} trend="12.5%" trendUp={true} icon={Briefcase} iconColor="bg-[#FCE4EC] text-[#D81B60]" />
         <StatCard title="Panding Verification" value={(data.stats.pendingVerification || 0).toLocaleString()} trend="5.9%" trendUp={true} icon={ShieldAlert} iconColor="bg-[#E8EAF6] text-[#3F51B5]" />

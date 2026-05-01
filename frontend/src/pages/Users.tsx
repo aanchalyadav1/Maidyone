@@ -67,16 +67,16 @@ export const Users = () => {
         {loading ? (
           <div className="py-2"><TableSkeleton columns={8} rows={6} /></div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[#6B7280] text-[12px] font-medium tracking-wide">
                   <th className="pb-4 font-bold px-4">Name</th>
                   <th className="pb-4 font-bold px-4">Email</th>
-                  <th className="pb-4 font-bold px-4">Phone</th>
+                  <th className="pb-4 font-bold px-4 hidden sm:table-cell">Phone</th>
                   <th className="pb-4 font-bold px-4">Bookings</th>
                   <th className="pb-4 font-bold px-4">Spend</th>
-                  <th className="pb-4 font-bold px-4">Address</th>
+                  <th className="pb-4 font-bold px-4 hidden md:table-cell">Address</th>
                   <th className="pb-4 font-bold px-4">Status</th>
                   <th className="pb-4 font-bold px-4 text-center">Action</th>
                 </tr>
@@ -93,10 +93,10 @@ export const Users = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.email || "-"}</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.phoneNumber || "-"}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280] hidden sm:table-cell truncate max-w-[100px]">{item.phoneNumber || "-"}</td>
                       <td className="py-3 px-4 text-[13px] text-[#6B7280]">{item.bookingsCount || 0}</td>
                       <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹{item.totalSpend || 0}</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280] truncate max-w-[150px]">{item.address || "-"}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280] hidden md:table-cell truncate max-w-[150px]">{item.address || "-"}</td>
                       <td className="py-3 px-4">
                         <span className={`px-3 py-1 rounded text-[11px] font-bold ${
                           item.status === 'active' ? 'bg-[#E1F7E3] text-[#1E7145]' : 
@@ -106,7 +106,7 @@ export const Users = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <button className="flex items-center justify-center gap-1.5 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-3 py-1.5 rounded-lg text-[12px] font-bold hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] mx-auto">
+                        <button className="flex items-center justify-center gap-1.5 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-4 py-2 min-h-[44px] rounded-lg text-[12px] font-bold hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] mx-auto">
                           <Edit className="w-3.5 h-3.5 text-[#0EA5A4]" /> Edit
                         </button>
                       </td>

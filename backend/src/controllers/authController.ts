@@ -1,34 +1,37 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { sendResponse } from '../utils/responseHandler';
+import admin from '../config/firebaseAdmin';
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { phone, password } = req.body;
+    let token;
 
-    if (!phone || !password) {
-      return sendResponse(res, 400, false, 'Please provide phone and password');
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
     }
 
-    // Find user by phoneNumber
-    const user = await User.findOne({ phoneNumber: phone });
+    if (!token) {
+      return sendResponse(res, 401, false, 'Not authorized, no token');
+    }
+
+    // Verify token using firebase-admin
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const firebaseUid = decodedToken.uid;
+    const email = decodedToken.email;
+
+    // Check MongoDB: if user not exists -> create
+    let user = await User.findOne({ firebaseUid });
 
     if (!user) {
-      return sendResponse(res, 401, false, 'Invalid credentials');
+      user = await User.create({
+        firebaseUid,
+        email,
+        name: decodedToken.name || email?.split('@')[0] || 'New User',
+        role: 'user',
+        status: 'active'
+      });
     }
-
-    // Compare password (plain for now)
-    if (user.password !== password) {
-      return sendResponse(res, 401, false, 'Invalid credentials');
-    }
-
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET || 'secret_key_123',
-      { expiresIn: '1d' }
-    );
 
     sendResponse(res, 200, true, 'Logged in successfully', {
       user: {

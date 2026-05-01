@@ -63,17 +63,17 @@ export const Tickets = () => {
         {loading ? (
           <div className="py-2"><TableSkeleton columns={8} rows={6} /></div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[#6B7280] text-[12px] font-medium tracking-wide">
                   <th className="pb-4 font-bold px-4">Ticket ID</th>
                   <th className="pb-4 font-bold px-4">Client</th>
-                  <th className="pb-4 font-bold px-4">Subject</th>
+                  <th className="pb-4 font-bold px-4 hidden sm:table-cell">Subject</th>
                   <th className="pb-4 font-bold px-4">Priority</th>
                   <th className="pb-4 font-bold px-4">Status</th>
                   <th className="pb-4 font-bold px-4">Assigned To</th>
-                  <th className="pb-4 font-bold px-4">Created Date</th>
+                  <th className="pb-4 font-bold px-4 hidden md:table-cell">Created Date</th>
                   <th className="pb-4 font-bold px-4 text-center">Action</th>
                 </tr>
               </thead>
@@ -86,7 +86,7 @@ export const Tickets = () => {
                         <img src={item.user?.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 1}`} className="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-100" />
                         <span className="font-bold text-[#111827] text-[13px]">{item.user?.name || 'Unknown'}</span>
                       </td>
-                      <td className="py-3 px-4 text-[13px] text-[#6B7280] max-w-[150px] truncate">{item.subject || 'No Subject'}</td>
+                      <td className="py-3 px-4 text-[13px] text-[#6B7280] hidden sm:table-cell max-w-[150px] truncate">{item.subject || 'No Subject'}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.priority === 'Urgent' ? 'bg-[#FEE2E2] text-[#DC2626]' : item.priority === 'High' ? 'bg-[#FEF3C7] text-[#D97706]' : 'bg-[#E1F7E3] text-[#1E7145]'}`}>
                           {item.priority || 'Medium'}
@@ -98,13 +98,13 @@ export const Tickets = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.assignedTo?.user?.name || 'Unassigned'}</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">{new Date(item.createdAt || Date.now()).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#6B7280] hidden md:table-cell">{new Date(item.createdAt || Date.now()).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                           <button className="flex items-center justify-center bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-1.5 rounded-lg text-[#6B7280] hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                           <button className="flex items-center justify-center bg-[#FAFAFA] border border-[#E5E7EB] px-4 py-2 min-h-[44px] rounded-lg text-[#6B7280] hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
                              <Eye className="w-4 h-4" />
                            </button>
-                           <button className="flex items-center justify-center bg-[#E1EDEA] border border-transparent px-2 py-1.5 rounded-lg text-[#1496A3] hover:bg-[#1496A3] hover:text-white transition shadow-sm">
+                           <button className="flex items-center justify-center bg-[#E1EDEA] border border-transparent px-4 py-2 min-h-[44px] rounded-lg text-[#1496A3] hover:bg-[#1496A3] hover:text-white transition shadow-sm">
                              <MessageSquare className="w-4 h-4" />
                            </button>
                         </div>

@@ -46,13 +46,13 @@ export const getDashboardAnalytics = async (req: Request, res: Response, next: N
       }
     ]);
     
-    const totalRevenue = revenueAgg.length > 0 ? revenueAgg[0].totalRevenue : 0;
-    const todayRevenue = revenueAgg.length > 0 ? revenueAgg[0].todayRevenue : 0;
+    const totalRevenue = revenueAgg.length > 0 ? (revenueAgg[0].totalRevenue || 0) : 0;
+    const todayRevenue = revenueAgg.length > 0 ? (revenueAgg[0].todayRevenue || 0) : 0;
 
     // 3. Entity stats
-    const totalUsers = await User.countDocuments({ role: 'user' });
-    const totalWorkers = await Worker.countDocuments({ verificationStatus: 'verified' });
-    const pendingVerification = await Worker.countDocuments({ verificationStatus: 'pending' });
+    const totalUsers = (await User.countDocuments({ role: 'user' })) || 0;
+    const totalWorkers = (await Worker.countDocuments({ verificationStatus: 'verified' })) || 0;
+    const pendingVerification = (await Worker.countDocuments({ verificationStatus: 'pending' })) || 0;
 
     // 4. bookingTrend (Group by date)
     const thirtyDaysAgo = new Date();
@@ -131,9 +131,12 @@ export const getDashboardAnalytics = async (req: Request, res: Response, next: N
 
     // 8. Lists
     const recentBookings = await Booking.find()
-      .populate('user', 'name avatar')
-      .populate('worker', 'user')
-      .populate('service', 'name category')
+      .populate('user', 'name avatar email')
+      .populate({
+        path: 'worker',
+        populate: { path: 'user', select: 'name email' }
+      })
+      .populate('service', 'name category basePrice')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -143,7 +146,7 @@ export const getDashboardAnalytics = async (req: Request, res: Response, next: N
       .limit(5);
 
     const complaints = await Ticket.find({ status: 'Open' })
-      .populate('user', 'name avatar')
+      .populate('user', 'name avatar email')
       .sort({ createdAt: -1 })
       .limit(5);
 

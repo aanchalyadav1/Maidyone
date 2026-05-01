@@ -33,7 +33,11 @@ export const getBookings = async (req: Request, res: Response, next: NextFunctio
     // Execute query with populate
     const bookings = await Booking.find(query)
       .populate('user', 'name email phoneNumber avatar')
-      .populate('worker', 'user rating isOnline')
+      .populate({
+        path: 'worker',
+        select: 'user rating isOnline',
+        populate: { path: 'user', select: 'name email' }
+      })
       .populate('service', 'name category basePrice')
       .skip(startIndex)
       .limit(limitNum)

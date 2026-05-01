@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendResponse } from '../utils/responseHandler';
-import User from '../models/User';
+import admin from '../config/firebaseAdmin';
 
-import jwt from 'jsonwebtoken';
-
-// In a real implementation this would verify Firebase JWT/custom JWT
+// Verify Firebase ID Token
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let token;
@@ -17,16 +15,15 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return sendResponse(res, 401, false, 'Not authorized, no token');
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123') as any;
-
-    const dbUser = await User.findById(decoded.id);
-    if (!dbUser) {
-      return sendResponse(res, 401, false, 'The user belonging to this token no longer exists.');
-    }
+    // Verify token using firebase-admin
+    const decodedToken = await admin.auth().verifyIdToken(token);
     
-    // Bind actual Mongoose Document to Request
-    (req as any).user = dbUser; 
+    // Attach uid and email to req.user without DB logic
+    (req as any).user = {
+      firebaseUid: decodedToken.uid,
+      email: decodedToken.email,
+    };
+    
     next();
   } catch (error) {
     return sendResponse(res, 401, false, 'Not authorized, token failed');
