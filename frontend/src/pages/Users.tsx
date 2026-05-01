@@ -35,27 +35,22 @@ export const Users = () => {
   }, [fetchUsers]);
 
   return (
-    <div className="space-y-6">
-      <div className="mb-4 text-left">
-        <h2 className="text-[20px] font-bold text-[#111827]">Users list</h2>
-        <span className="text-[#6B7280] text-[12px]">Manage and view your customers!</span>
-      </div>
-
-      <div className="bg-white p-6 rounded-[24px] shadow-sm border border-[#E5E7EB] min-h-[500px]">
+    <div className="space-y-5">
+      <div className="bg-white px-5 py-5 sm:px-6 sm:py-6 rounded-[22px] shadow-soft border border-border min-h-[520px]">
         {/* Header Controls */}
-        <div className="flex flex-col md:flex-row items-center mb-6 gap-4">
+        <div className="flex flex-col md:flex-row items-center mb-5 gap-3">
           <div className="relative w-full md:w-[320px]">
             <input 
               type="text" 
               placeholder="Search user..." 
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-4 pr-10 py-2.5 w-full border border-[#E5E7EB] rounded-xl text-[13px] outline-none focus:border-[#0EA5A4] transition-colors bg-[#FAFAFA]"
+              className="pl-4 pr-10 py-3 min-h-[44px] w-full border border-border rounded-xl text-[13px] outline-none focus:border-primary transition-colors bg-[#FAFAFA]"
             />
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-gray-400" />
           </div>
           
-          <div className="flex items-center gap-2 border border-[#E5E7EB] rounded-xl px-4 py-2.5 bg-[#FAFAFA] w-full md:w-[200px]">
+          <div className="flex items-center gap-2 border border-border rounded-xl px-4 py-3 min-h-[44px] bg-[#FAFAFA] w-full md:w-[200px]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             <select className="bg-transparent outline-none text-[13px] text-[#6B7280] w-full indent-1">
               <option>All Categories</option>
@@ -67,37 +62,37 @@ export const Users = () => {
         {loading ? (
           <div className="py-2"><TableSkeleton columns={8} rows={6} /></div>
         ) : (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+          <div className="overflow-x-auto w-full border border-border rounded-[14px]">
+            <table className="w-full text-left border-collapse min-w-[860px]">
               <thead>
-                <tr className="border-b border-gray-100 text-[#6B7280] text-[12px] font-medium tracking-wide">
-                  <th className="pb-4 font-bold px-4">Name</th>
-                  <th className="pb-4 font-bold px-4">Email</th>
-                  <th className="pb-4 font-bold px-4 hidden sm:table-cell">Phone</th>
-                  <th className="pb-4 font-bold px-4">Bookings</th>
-                  <th className="pb-4 font-bold px-4">Spend</th>
-                  <th className="pb-4 font-bold px-4 hidden md:table-cell">Address</th>
-                  <th className="pb-4 font-bold px-4">Status</th>
-                  <th className="pb-4 font-bold px-4 text-center">Action</th>
+                <tr className="border-b border-border bg-[#F3F4F6]/70 text-[#6B7280] text-[12px] font-medium tracking-wide">
+                  <th className="py-4 font-bold px-5">Name</th>
+                  <th className="py-4 font-bold px-5">Email</th>
+                  <th className="py-4 font-bold px-5 hidden sm:table-cell">Phone</th>
+                  <th className="py-4 font-bold px-5">Bookings</th>
+                  <th className="py-4 font-bold px-5">Spend</th>
+                  <th className="py-4 font-bold px-5 hidden md:table-cell">Address</th>
+                  <th className="py-4 font-bold px-5">Status</th>
+                  <th className="py-4 font-bold px-5 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {users && users.length > 0 ? users.map((item, index) => {
                   return (
-                    <tr key={item._id || index} className="border-b border-gray-50 hover:bg-gray-50/50 transition border-opacity-50">
-                      <td className="py-3 px-4 flex items-center gap-3">
+                    <tr key={item._id || index} className="border-b border-border/60 hover:bg-gray-50/50 transition border-opacity-50">
+                      <td className="py-4 px-5 flex items-center gap-3">
                         <img src={item.avatar || `https://i.pravatar.cc/150?img=${(index % 70) + 1}`} className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100" alt="avatar" />
                         <div className="flex flex-col">
                           <span className="font-bold text-[#111827] text-[14px]">{item.name || "Unknown"}</span>
                           <span className="text-[#6B7280] text-[11px] capitalize">{item.role || "User"}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280]">{item.email || "-"}</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280] hidden sm:table-cell truncate max-w-[100px]">{item.phoneNumber || "-"}</td>
-                      <td className="py-3 px-4 text-[13px] text-[#6B7280]">{item.bookingsCount || 0}</td>
-                      <td className="py-3 px-4 font-extrabold text-[13px] text-[#111827]">₹{item.totalSpend || 0}</td>
-                      <td className="py-3 px-4 text-[12px] text-[#6B7280] hidden md:table-cell truncate max-w-[150px]">{item.address || "-"}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-4 px-5 text-[12px] text-[#6B7280]">{item.email || "-"}</td>
+                      <td className="py-4 px-5 text-[12px] text-[#6B7280] hidden sm:table-cell truncate max-w-[120px]">{item.phoneNumber || "-"}</td>
+                      <td className="py-4 px-5 text-[13px] text-[#6B7280]">{item.bookingsCount || 0}</td>
+                      <td className="py-4 px-5 font-extrabold text-[13px] text-[#111827]">₹{item.totalSpend || 0}</td>
+                      <td className="py-4 px-5 text-[12px] text-[#6B7280] hidden md:table-cell truncate max-w-[180px]">{item.address || "-"}</td>
+                      <td className="py-4 px-5">
                         <span className={`px-3 py-1 rounded text-[11px] font-bold ${
                           item.status === 'active' ? 'bg-[#E1F7E3] text-[#1E7145]' : 
                           item.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
@@ -105,9 +100,9 @@ export const Users = () => {
                           {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Active"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <button className="flex items-center justify-center gap-1.5 text-[#111827] bg-[#FAFAFA] border border-[#E5E7EB] px-4 py-2 min-h-[44px] rounded-lg text-[12px] font-bold hover:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] mx-auto">
-                          <Edit className="w-3.5 h-3.5 text-[#0EA5A4]" /> Edit
+                      <td className="py-4 px-5 text-center">
+                        <button className="flex items-center justify-center gap-2 text-[#111827] bg-white border border-border px-4 py-2 min-h-[44px] rounded-xl text-[12px] font-extrabold hover:bg-gray-50 shadow-[0_1px_2px_rgba(0,0,0,0.05)] mx-auto">
+                          <Edit className="w-4 h-4 text-primary" /> Edit
                         </button>
                       </td>
                     </tr>
@@ -122,7 +117,7 @@ export const Users = () => {
           </div>
         )}
 
-        <div className="flex justify-between items-center mt-6">
+        <div className="flex justify-between items-center mt-5">
           <div className="flex items-center gap-1.5">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}

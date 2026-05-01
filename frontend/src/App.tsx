@@ -17,6 +17,9 @@ import { OperationsBoard } from './pages/OperationsBoard';
 import { AssignWorker } from './pages/AssignWorker';
 import { Settings } from './pages/Settings';
 import { Verification } from './pages/Verification';
+import { Coupons } from './pages/Coupons';
+import { Complaints } from './pages/Complaints';
+import { Banners } from './pages/Banners';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -46,6 +49,9 @@ function App() {
         <Route path="bookings/assign/:id" element={<AssignWorker />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="services" element={<Services />} />
+        <Route path="coupons" element={<Coupons />} />
+        <Route path="complaints" element={<Complaints />} />
+        <Route path="banners" element={<Banners />} />
       </Route>
     </Routes>
   );

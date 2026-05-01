@@ -76,23 +76,23 @@ export const Bookings = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border min-h-[500px]">
+    <div className="space-y-5">
+      <div className="bg-white px-5 py-5 sm:px-6 sm:py-6 rounded-[22px] shadow-soft border border-border min-h-[520px]">
         {/* Header Controls (Filters) */}
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <select className="border border-border rounded-lg px-4 py-[10px] text-[13px] text-text-secondary outline-none bg-white w-40">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>Filter by Status</option>
           </select>
-          <select className="border border-border rounded-lg px-4 py-[10px] text-[13px] text-text-secondary outline-none bg-white w-40">
+          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>Filter by Services</option>
           </select>
-          <select className="border border-border rounded-lg px-4 py-[10px] text-[13px] text-text-secondary outline-none bg-white w-40">
+          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>Filter by Date</option>
           </select>
-          <select className="border border-border rounded-lg px-4 py-[10px] text-[13px] text-text-secondary outline-none bg-white w-40">
+          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>Filter by Time</option>
           </select>
-          <select className="border border-border rounded-lg px-4 py-[10px] text-[13px] text-text-secondary outline-none bg-white w-40">
+          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>All Services</option>
           </select>
           <div className="relative flex-1 min-w-[200px]">
@@ -100,12 +100,12 @@ export const Bookings = () => {
             <input 
               type="text" 
               placeholder="Search here" 
-              className="pl-4 pr-10 py-[10px] w-full border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-text-primary"
+              className="pl-4 pr-10 py-3 min-h-[44px] w-full border border-border rounded-xl text-[13px] outline-none focus:border-primary transition-colors text-text-primary bg-white"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="bg-primary text-white text-[13px] font-bold px-6 py-[10px] min-h-[44px] rounded-lg hover:bg-primary-dark transition-colors">
+          <button className="bg-primary text-white text-[13px] font-extrabold px-6 py-3 min-h-[44px] rounded-xl hover:bg-primary-dark transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             Apply Filter
           </button>
         </div>
@@ -116,9 +116,9 @@ export const Bookings = () => {
              <TableSkeleton columns={7} rows={6} />
           </div>
         ) : (
-          <div className="overflow-x-auto w-full rounded-[12px] border border-border">
+          <div className="overflow-x-auto w-full rounded-[14px] border border-border">
             <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-              <thead className="bg-[#E5E7EB]/50">
+              <thead className="bg-[#F3F4F6]/70">
                 <tr className="text-text-primary text-[13px]">
                   <th className="py-4 px-6 font-bold">Booking ID</th>
                   <th className="py-4 px-6 font-bold">Guest Name</th>
@@ -156,7 +156,7 @@ export const Bookings = () => {
                       {renderStatus(booking.status)}
                     </td>
                     <td className="py-4 px-6">
-                       <button className="flex items-center gap-2 text-[13px] border border-border text-text-primary font-bold px-4 py-2 min-h-[44px] rounded-lg hover:bg-gray-50 transition-colors shadow-sm bg-white">
+                       <button className="flex items-center gap-2 text-[13px] border border-border text-text-primary font-extrabold px-4 py-2 min-h-[44px] rounded-xl hover:bg-gray-50 transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.05)] bg-white">
                          Edit 
                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                        </button>
@@ -170,7 +170,7 @@ export const Bookings = () => {
 
         {/* Pagination Matches Figma exact style */}
         {!loading && (
-          <div className="flex items-center mt-6 gap-2">
+          <div className="flex items-center mt-5 gap-2">
             <button 
               disabled={page === 1}
               onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -193,7 +193,7 @@ export const Bookings = () => {
             <button 
               disabled={page === totalPages || totalPages === 0}
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              className="flex items-center text-text-primary text-[13px] font-bold gap-1 ml-2 border border-border px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="flex items-center text-text-primary text-[13px] font-bold gap-1 ml-2 border border-border px-3 py-1.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             >
               Next
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>

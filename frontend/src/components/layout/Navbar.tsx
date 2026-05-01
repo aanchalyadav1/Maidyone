@@ -1,5 +1,4 @@
 import React from 'react';
-import { Search, Bell, Plus } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 const routeNames: Record<string, string> = {
@@ -13,12 +12,23 @@ const routeNames: Record<string, string> = {
   '/tickets': 'Tickets',
   '/notifications': 'Notifications',
   '/services': 'Services',
+  '/coupons': 'Coupons',
+  '/complaints': 'Complaints',
+  '/banners': 'Banners',
 };
 
 export const Navbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  let title = currentPath === '/' ? 'Dashboard' : currentPath.substring(1).split('/')[0].charAt(0).toUpperCase() + currentPath.substring(1).split('/')[0].substring(1);
+  let title =
+    routeNames[currentPath] ??
+    (currentPath === '/'
+      ? 'Dashboard'
+      : currentPath
+          .substring(1)
+          .split('/')[0]
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (m) => m.toUpperCase()));
   if (currentPath.includes('bookings/details')) title = 'Booking details';
   else if (currentPath.includes('bookings')) title = 'Booking management';
   
@@ -28,10 +38,16 @@ export const Navbar = () => {
                    `Manage your ${currentPath.substring(1).split('/')[0]} here`;
 
   return (
-    <header className="flex items-center justify-between">
-      <div>
-        <h2 className="text-[22px] font-bold text-text-primary capitalize leading-tight mb-1">{title}</h2>
-        <p className="text-sm text-text-secondary">{subTitle}</p>
+    <header className="min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="text-primary font-extrabold text-[14px] tracking-wide shrink-0">Maidyone</span>
+        <span className="h-4 w-px bg-border shrink-0" />
+        <div className="min-w-0">
+          <h2 className="text-[16px] sm:text-[18px] font-extrabold text-text-primary leading-tight truncate">
+            {title}
+          </h2>
+          <p className="text-[12px] sm:text-[13px] text-text-secondary truncate">{subTitle}</p>
+        </div>
       </div>
     </header>
   );
