@@ -13,26 +13,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
 const responseHandler_1 = require("../utils/responseHandler");
+const firebaseAdmin_1 = __importDefault(require("../config/firebaseAdmin"));
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { phone, password } = req.body;
-        if (!phone || !password) {
-            return (0, responseHandler_1.sendResponse)(res, 400, false, 'Please provide phone and password');
+        let token;
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
         }
-        // Find user by phoneNumber
-        const user = yield User_1.default.findOne({ phoneNumber: phone });
+        if (!token) {
+            return (0, responseHandler_1.sendResponse)(res, 401, false, 'Not authorized, no token');
+        }
+        // Verify token using firebase-admin
+        const decodedToken = yield firebaseAdmin_1.default.auth().verifyIdToken(token);
+        const firebaseUid = decodedToken.uid;
+        const email = decodedToken.email;
+        // Check MongoDB: if user not exists -> create
+        let user = yield User_1.default.findOne({ firebaseUid });
         if (!user) {
-            return (0, responseHandler_1.sendResponse)(res, 401, false, 'Invalid credentials');
+            user = yield User_1.default.create({
+                firebaseUid,
+                email,
+                name: decodedToken.name || (email === null || email === void 0 ? void 0 : email.split('@')[0]) || 'New User',
+                role: 'user',
+                status: 'active'
+            });
         }
-        // Compare password (plain for now)
-        if (user.password !== password) {
-            return (0, responseHandler_1.sendResponse)(res, 401, false, 'Invalid credentials');
-        }
-        // Generate JWT
-        const token = jsonwebtoken_1.default.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'secret_key_123', { expiresIn: '1d' });
         (0, responseHandler_1.sendResponse)(res, 200, true, 'Logged in successfully', {
             user: {
                 id: user._id,

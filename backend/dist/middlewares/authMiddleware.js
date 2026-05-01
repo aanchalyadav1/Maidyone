@@ -14,9 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.protect = void 0;
 const responseHandler_1 = require("../utils/responseHandler");
-const User_1 = __importDefault(require("../models/User"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// In a real implementation this would verify Firebase JWT/custom JWT
+const firebaseAdmin_1 = __importDefault(require("../config/firebaseAdmin"));
+// Verify Firebase ID Token
 const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let token;
@@ -26,14 +25,13 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         if (!token) {
             return (0, responseHandler_1.sendResponse)(res, 401, false, 'Not authorized, no token');
         }
-        // Verify token
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'secret_key_123');
-        const dbUser = yield User_1.default.findById(decoded.id);
-        if (!dbUser) {
-            return (0, responseHandler_1.sendResponse)(res, 401, false, 'The user belonging to this token no longer exists.');
-        }
-        // Bind actual Mongoose Document to Request
-        req.user = dbUser;
+        // Verify token using firebase-admin
+        const decodedToken = yield firebaseAdmin_1.default.auth().verifyIdToken(token);
+        // Attach uid and email to req.user without DB logic
+        req.user = {
+            firebaseUid: decodedToken.uid,
+            email: decodedToken.email,
+        };
         next();
     }
     catch (error) {

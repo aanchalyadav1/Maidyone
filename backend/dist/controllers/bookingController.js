@@ -54,7 +54,11 @@ const getBookings = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         // Execute query with populate
         const bookings = yield Booking_1.default.find(query)
             .populate('user', 'name email phoneNumber avatar')
-            .populate('worker', 'user rating isOnline')
+            .populate({
+            path: 'worker',
+            select: 'user rating isOnline',
+            populate: { path: 'user', select: 'name email' }
+        })
             .populate('service', 'name category basePrice')
             .skip(startIndex)
             .limit(limitNum)

@@ -58,12 +58,12 @@ const getDashboardAnalytics = (req, res, next) => __awaiter(void 0, void 0, void
                 }
             }
         ]);
-        const totalRevenue = revenueAgg.length > 0 ? revenueAgg[0].totalRevenue : 0;
-        const todayRevenue = revenueAgg.length > 0 ? revenueAgg[0].todayRevenue : 0;
+        const totalRevenue = revenueAgg.length > 0 ? (revenueAgg[0].totalRevenue || 0) : 0;
+        const todayRevenue = revenueAgg.length > 0 ? (revenueAgg[0].todayRevenue || 0) : 0;
         // 3. Entity stats
-        const totalUsers = yield User_1.default.countDocuments({ role: 'user' });
-        const totalWorkers = yield Worker_1.default.countDocuments({ verificationStatus: 'verified' });
-        const pendingVerification = yield Worker_1.default.countDocuments({ verificationStatus: 'pending' });
+        const totalUsers = (yield User_1.default.countDocuments({ role: 'user' })) || 0;
+        const totalWorkers = (yield Worker_1.default.countDocuments({ verificationStatus: 'verified' })) || 0;
+        const pendingVerification = (yield Worker_1.default.countDocuments({ verificationStatus: 'pending' })) || 0;
         // 4. bookingTrend (Group by date)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -136,9 +136,12 @@ const getDashboardAnalytics = (req, res, next) => __awaiter(void 0, void 0, void
         const cityStats = cityStatsAgg;
         // 8. Lists
         const recentBookings = yield Booking_1.default.find()
-            .populate('user', 'name avatar')
-            .populate('worker', 'user')
-            .populate('service', 'name category')
+            .populate('user', 'name avatar email')
+            .populate({
+            path: 'worker',
+            populate: { path: 'user', select: 'name email' }
+        })
+            .populate('service', 'name category basePrice')
             .sort({ createdAt: -1 })
             .limit(5);
         const workerRequests = yield Worker_1.default.find({ verificationStatus: 'pending' })
@@ -146,7 +149,7 @@ const getDashboardAnalytics = (req, res, next) => __awaiter(void 0, void 0, void
             .sort({ createdAt: -1 })
             .limit(5);
         const complaints = yield Ticket_1.default.find({ status: 'Open' })
-            .populate('user', 'name avatar')
+            .populate('user', 'name avatar email')
             .sort({ createdAt: -1 })
             .limit(5);
         (0, responseHandler_1.sendResponse)(res, 200, true, 'Dashboard data fetched', {
