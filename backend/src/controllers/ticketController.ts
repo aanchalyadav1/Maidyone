@@ -44,7 +44,7 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
     const ticket = await Ticket.findById(req.params.id)
       .populate('user', 'name email')
       .populate('assignedTo');
-      
+
     if (!ticket) return sendResponse(res, 404, false, 'Ticket not found');
     sendResponse(res, 200, true, 'Ticket details fetched', ticket);
   } catch (error) {
@@ -55,7 +55,7 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
 export const createTicket = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { subject, description, priority, userId } = req.body;
-    
+
     if (!subject || !description || !userId) {
       return sendResponse(res, 400, false, 'Subject, description and userId are required');
     }
@@ -88,9 +88,15 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
 export const updateTicketStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status, assignedTo } = req.body;
-    
+
     const updateData: any = {};
-    if (status) updateData.status = status;
+    if (status) {
+      const allowedStatuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
+      if (!allowedStatuses.includes(status)) {
+        return sendResponse(res, 400, false, 'Invalid status provided');
+      }
+      updateData.status = status;
+    }
     if (assignedTo) updateData.assignedTo = assignedTo;
 
     const ticket = await Ticket.findByIdAndUpdate(
@@ -100,7 +106,7 @@ export const updateTicketStatus = async (req: Request, res: Response, next: Next
     );
 
     if (!ticket) return sendResponse(res, 404, false, 'Ticket not found');
-    
+
     // Auto-trigger notification if status changed
     if (status) {
       await Notification.create({

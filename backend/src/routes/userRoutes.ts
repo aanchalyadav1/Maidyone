@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { getUsers, getUserById } from '../controllers/userController';
-// import { protect, authorize } from '../middlewares/authMiddleware';
+import { protect } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-// router.use(protect);
+router.use(protect);
 
 router.get('/', getUsers);
 router.get('/:id', getUserById);

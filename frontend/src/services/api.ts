@@ -3,6 +3,33 @@ import { store } from '../store';
 import { logout } from '../features/auth/authSlice';
 import { getApiV1BaseUrl } from '../config/apiBase';
 
+export interface ApiEnvelope<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export const extractApiData = <T>(response: unknown, fallback: T): T => {
+  const envelope = response as Partial<ApiEnvelope<T>> | undefined;
+  return envelope?.data ?? fallback;
+};
+
+export const extractApiPagination = (response: unknown) => {
+  const envelope = response as Partial<ApiEnvelope<unknown>> | undefined;
+  return envelope?.pagination;
+};
+
+export const normalizeApiError = (error: unknown, fallbackMessage = 'Request failed') => {
+  const err = error as { response?: { data?: { message?: string } }; message?: string };
+  return err?.response?.data?.message || err?.message || fallbackMessage;
+};
+
 // Create base Axios instance
 const api = axios.create({
   baseURL: getApiV1BaseUrl(),

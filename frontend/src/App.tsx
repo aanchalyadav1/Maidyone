@@ -20,6 +20,7 @@ import { Verification } from './pages/Verification';
 import { Coupons } from './pages/Coupons';
 import { Complaints } from './pages/Complaints';
 import { Banners } from './pages/Banners';
+import { APP_ROUTES, AppRouteKey } from './config/routes';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -28,6 +29,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const routeElements: Record<AppRouteKey, React.ReactNode> = {
+    dashboard: <Dashboard />,
+    bookings: <Bookings />,
+    'booking-details': <BookingDetails />,
+    users: <Users />,
+    workers: <Workers />,
+    payments: <Payments />,
+    settings: <Settings />,
+    verification: <Verification />,
+    tickets: <Tickets />,
+    'operations-board': <OperationsBoard />,
+    'assign-worker': <AssignWorker />,
+    notifications: <Notifications />,
+    services: <Services />,
+    coupons: <Coupons />,
+    complaints: <Complaints />,
+    banners: <Banners />,
+  };
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -36,22 +56,17 @@ function App() {
           <AdminLayout />
         </ProtectedRoute>
       }>
-        <Route index element={<Dashboard />} />
-        <Route path="bookings" element={<Bookings />} />
-        <Route path="bookings/details/:id" element={<BookingDetails />} />
-        <Route path="users" element={<Users />} />
-        <Route path="workers" element={<Workers />} />
-        <Route path="payments" element={<Payments />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="verification" element={<Verification />} />
-        <Route path="tickets" element={<Tickets />} />
-        <Route path="operations-board" element={<OperationsBoard />} />
-        <Route path="bookings/assign/:id" element={<AssignWorker />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="services" element={<Services />} />
-        <Route path="coupons" element={<Coupons />} />
-        <Route path="complaints" element={<Complaints />} />
-        <Route path="banners" element={<Banners />} />
+        {APP_ROUTES.map((route) => {
+          const path = route.path === '/' ? '' : route.path.replace(/^\//, '');
+          return (
+            <Route
+              key={route.key}
+              index={route.path === '/'}
+              path={route.path === '/' ? undefined : path}
+              element={routeElements[route.key]}
+            />
+          );
+        })}
       </Route>
     </Routes>
   );

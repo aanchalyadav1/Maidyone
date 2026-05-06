@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { getServices, createService, getServiceById, updateService, deleteService } from '../controllers/serviceController';
+import { protect } from '../middlewares/authMiddleware';
 
 const router = Router();
+
+router.use(protect);
 
 router.get('/', getServices);
 router.post('/', createService);

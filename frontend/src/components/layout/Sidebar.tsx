@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  UserSquare2, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  UserSquare2,
+  CreditCard,
   Settings,
   ShieldCheck,
   Ticket,
@@ -17,23 +17,24 @@ import {
   Kanban
 } from 'lucide-react';
 import clsx from 'clsx';
+import { SIDEBAR_ROUTES } from '../../config/routes';
 
-const navItems = [
-  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Bookings management', path: '/bookings', icon: Calendar },
-  { name: 'Operations board', path: '/operations-board', icon: Kanban },
-  { name: 'User', path: '/users', icon: Users },
-  { name: 'Worker', path: '/workers', icon: UserSquare2 },
-  { name: 'Payment', path: '/payments', icon: CreditCard },
-  { name: 'Settings', path: '/settings', icon: Settings },
-  { name: 'Verification', path: '/verification', icon: ShieldCheck },
-  { name: 'Tickets', path: '/tickets', icon: Ticket },
-  { name: 'Notification', path: '/notifications', icon: Bell },
-  { name: 'Services', path: '/services', icon: Wrench },
-  { name: 'Coupons', path: '/coupons', icon: Tag },
-  { name: 'Complaints', path: '/complaints', icon: AlertCircle },
-  { name: 'Banners', path: '/banners', icon: Image },
-];
+const iconMap = {
+  LayoutDashboard,
+  Calendar,
+  Kanban,
+  Users,
+  UserSquare2,
+  CreditCard,
+  Settings,
+  ShieldCheck,
+  Ticket,
+  Bell,
+  Wrench,
+  Tag,
+  AlertCircle,
+  Image,
+} as const;
 
 export const Sidebar = () => {
   return (
@@ -51,23 +52,26 @@ export const Sidebar = () => {
         </div>
 
         <nav className="flex flex-col gap-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                clsx(
-                  'flex items-center gap-3 px-4 py-[10px] rounded-[18px] transition-all duration-200 text-[13px] font-semibold min-h-[44px]',
-                  isActive 
-                    ? 'bg-white/25 text-white shadow-sm ring-1 ring-white/10' 
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                )
-              }
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{item.name}</span>
-            </NavLink>
-          ))}
+          {SIDEBAR_ROUTES.map((item) => {
+            const Icon = item.sidebarIcon ? iconMap[item.sidebarIcon] : LayoutDashboard;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  clsx(
+                    'flex items-center gap-3 px-4 py-[10px] rounded-[18px] transition-all duration-200 text-[13px] font-semibold min-h-[44px]',
+                    isActive
+                      ? 'bg-white/25 text-white shadow-sm ring-1 ring-white/10'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  )
+                }
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="truncate">{item.navLabel || item.title}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 

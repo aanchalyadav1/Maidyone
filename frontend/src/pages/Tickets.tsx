@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import api from '../services/api';
+import api, { extractApiData, extractApiPagination } from '../services/api';
 import { ChevronLeft, ChevronRight, Filter, Edit, Eye, MessageSquare } from 'lucide-react';
 import { TableSkeleton } from '../components/common/Skeleton';
 
@@ -13,10 +13,11 @@ export const Tickets = () => {
   const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
-      const res: any = await api.get(`/tickets?page=${page}&limit=10&search=${search}`);
-      const data = res.data || res;
-      setTickets(data.tickets || (Array.isArray(data) ? data : []));
-      setTotalPages(res.pagination?.totalPages || data.pagination?.totalPages || data.totalPages || 1);
+      const envelope: any = await api.get(`/tickets?page=${page}&limit=10&search=${search}`);
+      const data = extractApiData<{ tickets: any[] }>(envelope, { tickets: [] } as any);
+      setTickets(data.tickets ?? []);
+      const pagination = extractApiPagination(envelope);
+      setTotalPages(pagination?.totalPages ?? 1);
     } catch (err) {
       console.warn('Failed to fetch tickets');
       setTickets([]);

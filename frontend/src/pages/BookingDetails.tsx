@@ -1,51 +1,67 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Building2, Users, Receipt, Phone, Mail } from 'lucide-react';
-import { Badge } from '../components/common/Badge';
-import { Button } from '../components/common/Button';
+import { Building2, Users, Receipt, Phone, Mail, Loader2 } from 'lucide-react';
+import api, { extractApiData, extractApiPagination, normalizeApiError } from '../services/api';
 
 export const BookingDetails = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
-
-  // Mock data for UI development
-  const booking = {
-    id: id || 'BK12345',
-    accommodation: 'Oceanview Apartment',
-    status: 'Confirmed',
-    checkIn: 'May 15, 2023 | 3:00 PM',
-    checkOut: 'May 20, 2023 | 11:00 AM',
-    nights: 5,
-    guests: '2 Adults, 1 Child',
-    specialRequests: 'Late check-in, Extra Towels',
-    user: {
-      name: 'Michael Roberts',
-      email: 'michael.roberts@email.com',
-      phone: '+1 234 567 8900',
-      avatar: 'https://i.pravatar.cc/150?u=michael'
-    },
-    summary: {
-      rental: 750.00,
-      cleaning: 50.00,
-      service: 25.00,
-      taxes: 80.00,
-      discount: 50.00,
-      total: 855.00
-    },
-    paymentStatus: 'Paid',
-    paymentMethod: 'Paid via Credit Card',
-    activity: [
-      { date: 'May 12, 2023:', action: 'Booking Confirmed' },
-      { date: 'May 14, 2023:', action: 'Payment Received' },
-      { date: 'May 15, 2023:', action: 'Guest Checked In' }
-    ]
-  };
+  const [error, setError] = useState<string | null>(null);
+  const [booking, setBooking] = useState<any>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>('Not paid');
+  const [paymentMethod, setPaymentMethod] = useState<string>('—');
 
   useEffect(() => {
-    // Simulate loading to view skeleton (later)
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchBooking = async () => {
+      try {
+        if (!id) return;
+        setLoading(true);
+        setError(null);
+
+        const bookingEnvelope = await api.get(`/bookings/${id}`);
+        const bookingData = extractApiData<any>(bookingEnvelope, null as any);
+        setBooking(bookingData);
+
+        const paymentsEnvelope = await api.get('/payments', {
+          params: { booking: bookingData?._id, limit: 5 }
+        });
+        const paymentsData = extractApiData<{ payments: any[] }>(paymentsEnvelope, { payments: [] } as any);
+        const firstPayment = paymentsData.payments?.[0];
+        if (firstPayment) {
+          setPaymentStatus(firstPayment.status || 'Completed');
+          setPaymentMethod(firstPayment.method ? String(firstPayment.method) : '—');
+        } else {
+          setPaymentStatus('Not paid');
+          setPaymentMethod('—');
+        }
+      } catch (e: any) {
+        setError(normalizeApiError(e, 'Failed to load booking details'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [id]);
+
+  const activity = useMemo(() => {
+    if (!booking) return [];
+    const activities: Array<{ date: string; action: string }> = [];
+    const created = booking.createdAt ? new Date(booking.createdAt) : null;
+    if (created) {
+      activities.push({
+        date: created.toLocaleDateString(),
+        action: `Booking ${booking.status}`
+      });
+    }
+    if (paymentStatus && paymentStatus !== 'Not paid') {
+      activities.push({
+        date: created ? created.toLocaleDateString() : new Date().toLocaleDateString(),
+        action: `Payment ${paymentStatus}`
+      });
+    }
+    return activities;
+  }, [booking, paymentStatus]);
 
   if (loading) {
     return (
@@ -75,12 +91,34 @@ export const BookingDetails = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border">
+          <p className="text-red-600 font-semibold">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border">
+          <p className="text-text-secondary">Booking not found.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Title Row */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-[22px] font-bold text-text-primary">Booking Details</h2>
-        <span className="text-text-secondary text-[13px]">Booking ID: <span className="font-bold text-text-primary">#{booking.id}</span></span>
+        <span className="text-text-secondary text-[13px]">
+          Booking ID: <span className="font-bold text-text-primary">#{booking.bookingId || booking._id}</span>
+        </span>
       </div>
 
       {/* Main Content Grid */}
@@ -88,12 +126,16 @@ export const BookingDetails = () => {
         
         {/* Left Column - User Profile */}
         <div className="lg:col-span-3 bg-white p-8 rounded-[24px] shadow-sm border border-border flex flex-col items-center">
-          <img src={booking.user.avatar} alt={booking.user.name} className="w-[100px] h-[100px] rounded-full border-4 border-gray-50 mb-4" />
-          <h3 className="font-bold text-lg mb-1">{booking.user.name}</h3>
-          <p className="text-primary text-[13px] font-medium mb-3 hover:underline cursor-pointer">{booking.user.email}</p>
+          <img
+            src={booking.user?.avatar}
+            alt={booking.user?.name || 'User'}
+            className="w-[100px] h-[100px] rounded-full border-4 border-gray-50 mb-4"
+          />
+          <h3 className="font-bold text-lg mb-1">{booking.user?.name}</h3>
+          <p className="text-primary text-[13px] font-medium mb-3 hover:underline cursor-pointer">{booking.user?.email}</p>
           <p className="text-text-secondary text-[13px] flex items-center gap-1.5">
              <Phone className="w-3.5 h-3.5" />
-             {booking.user.phone}
+             {booking.user?.phoneNumber || '—'}
           </p>
         </div>
 
@@ -104,7 +146,7 @@ export const BookingDetails = () => {
              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">Accommodation</p>
              <p className="font-bold text-[15px] flex items-center gap-2">
                <Building2 className="w-4 h-4 text-gray-400" />
-               {booking.accommodation}
+              {booking.service?.name || '—'}
              </p>
           </div>
 
@@ -118,28 +160,30 @@ export const BookingDetails = () => {
              <div className="grid grid-cols-2 gap-6 mb-6">
                <div>
                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">Check-in:</p>
-                  <p className="font-bold text-[13px]">{booking.checkIn}</p>
+                  <p className="font-bold text-[13px]">
+                    {booking.date ? new Date(booking.date).toLocaleString() : '—'}
+                  </p>
                </div>
                <div>
                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">Check-out:</p>
-                  <p className="font-bold text-[13px]">{booking.checkOut}</p>
+                  <p className="font-bold text-[13px]">—</p>
                </div>
              </div>
              
-             <p className="font-extrabold text-[14px] mb-6">{booking.nights} Nights</p>
+             <p className="font-extrabold text-[14px] mb-6">—</p>
 
              <div className="space-y-4">
                <div>
                  <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1">
                    <Users className="w-3 h-3" /> Guests
                  </p>
-                 <p className="font-medium text-[13px]">{booking.guests}</p>
+                  <p className="font-medium text-[13px]">—</p>
                </div>
                <div>
                  <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1">
                    <Receipt className="w-3 h-3" /> Special Requests:
                  </p>
-                 <p className="font-medium text-[13px]">{booking.specialRequests}</p>
+                  <p className="font-medium text-[13px]">{booking.notes || '—'}</p>
                </div>
              </div>
           </div>
@@ -151,15 +195,22 @@ export const BookingDetails = () => {
           <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border">
              <h3 className="font-bold text-[15px] mb-4">Booking Summary</h3>
              <div className="space-y-2.5 text-[13px]">
-                <div className="flex justify-between text-text-secondary font-medium"><span>Rental Rate:</span> <span className="font-bold text-text-primary text-[12px]">${booking.summary.rental.toFixed(2)}</span></div>
-                <div className="flex justify-between text-text-secondary font-medium"><span>Cleaning Fee:</span> <span className="font-bold text-text-primary text-[12px]">${booking.summary.cleaning.toFixed(2)}</span></div>
-                <div className="flex justify-between text-text-secondary font-medium"><span>Service Fee:</span> <span className="font-bold text-text-primary text-[12px]">${booking.summary.service.toFixed(2)}</span></div>
-                <div className="flex justify-between text-text-secondary font-medium pb-2 border-b border-gray-100"><span>Taxes:</span> <span className="font-bold text-text-primary text-[12px]">${booking.summary.taxes.toFixed(2)}</span></div>
-                <div className="flex justify-between text-text-secondary font-medium pt-1"><span>Discount:</span> <span className="font-bold text-[#DC2626] text-[12px]">-${booking.summary.discount.toFixed(2)}</span></div>
+               <div className="flex justify-between text-text-secondary font-medium">
+                 <span>Rental Rate:</span>
+                 <span className="font-bold text-text-primary text-[12px]">
+                   {booking.service?.basePrice ? `$${Number(booking.service.basePrice).toFixed(2)}` : '—'}
+                 </span>
+               </div>
+               <div className="flex justify-between text-text-secondary font-medium"><span>Cleaning Fee:</span> <span className="font-bold text-text-primary text-[12px]">—</span></div>
+               <div className="flex justify-between text-text-secondary font-medium"><span>Service Fee:</span> <span className="font-bold text-text-primary text-[12px]">—</span></div>
+               <div className="flex justify-between text-text-secondary font-medium pb-2 border-b border-gray-100"><span>Taxes:</span> <span className="font-bold text-text-primary text-[12px]">—</span></div>
+               <div className="flex justify-between text-text-secondary font-medium pt-1"><span>Discount:</span> <span className="font-bold text-[#DC2626] text-[12px]">—</span></div>
              </div>
              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                <span className="font-bold text-[15px]">Total Amount:</span>
-               <span className="font-extrabold text-[18px]">${booking.summary.total.toFixed(2)}</span>
+              <span className="font-extrabold text-[18px]">
+                {booking.totalAmount !== undefined ? `$${Number(booking.totalAmount).toFixed(2)}` : '—'}
+              </span>
              </div>
           </div>
 
@@ -167,18 +218,18 @@ export const BookingDetails = () => {
           <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border">
              <div className="flex justify-between items-center mb-2">
                <h3 className="font-bold text-[14px]">Payment Status:</h3>
-               <div className="bg-[#E1F7E3] text-[#1E7145] px-3 py-1 text-[11px] font-bold rounded flex items-center">{booking.paymentStatus}</div>
+              <div className="bg-[#E1F7E3] text-[#1E7145] px-3 py-1 text-[11px] font-bold rounded flex items-center">{paymentStatus}</div>
              </div>
-             <p className="text-[10px] font-medium text-text-secondary">{booking.paymentMethod}</p>
+            <p className="text-[10px] font-medium text-text-secondary">{paymentMethod}</p>
           </div>
 
           {/* Activity Log */}
           <div className="bg-white p-6 rounded-[24px] shadow-sm border border-border">
              <h3 className="font-bold text-[14px] mb-4">Activity Log</h3>
              <div className="space-y-3">
-               {booking.activity.map((act, i) => (
+              {activity.map((act, i) => (
                  <div key={i} className="flex gap-2 text-[10px]">
-                   <span className="text-gray-400 font-medium whitespace-nowrap pt-[2px]">• {act.date}</span>
+                  <span className="text-gray-400 font-medium whitespace-nowrap pt-[2px]">• {act.date}</span>
                    <span className="font-medium text-text-secondary leading-tight">{act.action}</span>
                  </div>
                ))}
