@@ -1,0 +1,23 @@
+# Secrets — never commit (use platform env vars, e.g. Render)
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build artifacts (source of truth: TypeScript under src/)
+dist/
+**/dist/
+
+# Logs and caches
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

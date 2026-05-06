@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendResponse } from '../utils/responseHandler';
 import admin from '../config/firebaseAdmin';
+import User from '../models/User';
 
-// Verify Firebase ID Token
+// Verify Firebase ID Token and attach Mongo user (required for routes using req.user._id)
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let token;
@@ -15,15 +16,20 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return sendResponse(res, 401, false, 'Not authorized, no token');
     }
 
-    // Verify token using firebase-admin
     const decodedToken = await admin.auth().verifyIdToken(token);
-    
-    // Attach uid and email to req.user without DB logic
+
+    const dbUser = await User.findOne({ firebaseUid: decodedToken.uid });
+    if (!dbUser) {
+      return sendResponse(res, 401, false, 'Not authorized, user not registered. Complete login first.');
+    }
+
     (req as any).user = {
+      _id: dbUser._id,
       firebaseUid: decodedToken.uid,
-      email: decodedToken.email,
+      email: decodedToken.email ?? dbUser.email,
+      role: dbUser.role,
     };
-    
+
     next();
   } catch (error) {
     return sendResponse(res, 401, false, 'Not authorized, token failed');

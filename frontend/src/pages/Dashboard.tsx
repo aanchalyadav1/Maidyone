@@ -57,10 +57,17 @@ export const Dashboard = () => {
         setLoading(true);
         const res: any = await api.get('/dashboard');
         
+        const rawTrend = res.data?.bookingTrend || [];
+        const bookingTrend = rawTrend.map((d: { date?: string; bookings?: number; completed?: number }) => ({
+          name: d.date ?? '',
+          Booking: d.bookings ?? 0,
+          Completed: d.completed ?? 0,
+        }));
+
         setData({
           ...INITIAL_DATA,
           stats: { ...INITIAL_DATA.stats, ...res.data?.stats },
-          bookingTrend: res.data?.bookingTrend || [],
+          bookingTrend,
           revenueTrend: res.data?.revenueTrend || [],
           serviceDistribution: res.data?.serviceDistribution || [],
           cityStats: res.data?.cityStats?.length ? 
