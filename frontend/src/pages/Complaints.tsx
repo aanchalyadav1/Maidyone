@@ -1,22 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Badge } from '../components/common/Badge';
 import { AlertCircle, Search } from 'lucide-react';
+import api, { extractApiData, normalizeApiError } from '../services/api';
 
 type Complaint = {
-  id: string;
+  _id: string;
   ticketId: string;
   subject: string;
   status: 'Open' | 'In progress' | 'Closed';
-  createdAt: string;
+  createdAt: string | Date;
 };
-
-const SEED: Complaint[] = [
-  { id: 'cmp_1', ticketId: '#TKT-1024', subject: 'Worker arrived late', status: 'Open', createdAt: new Date().toISOString() },
-  { id: 'cmp_2', ticketId: '#TKT-1025', subject: 'Payment marked failed but deducted', status: 'In progress', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'cmp_3', ticketId: '#TKT-1026', subject: 'Service quality issue', status: 'Closed', createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-];
 
 function badgeVariant(status: Complaint['status']) {
   switch (status) {
@@ -31,12 +26,58 @@ function badgeVariant(status: Complaint['status']) {
 
 export const Complaints = () => {
   const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<Complaint[]>([]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return SEED;
-    return SEED.filter((c) => (c.ticketId + c.subject).toLowerCase().includes(q));
+  const mapTicketToComplaint = (t: any): Complaint => {
+    const rawStatus = t.status;
+    let status: Complaint['status'] = 'Open';
+    if (rawStatus === 'In Progress') status = 'In progress';
+    else if (rawStatus === 'Resolved' || rawStatus === 'Closed') status = 'Closed';
+
+    return {
+      _id: t._id,
+      ticketId: t.ticketId,
+      subject: t.subject,
+      status,
+      createdAt: t.createdAt
+    };
+  };
+
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const envelope = await api.get('/tickets', {
+        params: {
+          page: 1,
+          limit: 20,
+          search: query || undefined
+        }
+      });
+      const data = extractApiData<{ tickets: any[] }>(envelope, { tickets: [] } as any);
+      setTickets((data.tickets ?? []).map(mapTicketToComplaint));
+    } catch (e: any) {
+      setError(normalizeApiError(e, 'Failed to fetch complaints'));
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchTickets(), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
+
+  useEffect(() => {
+    fetchTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = useMemo(() => tickets, [tickets]);
 
   return (
     <div className="space-y-6">
@@ -63,12 +104,19 @@ export const Complaints = () => {
               className="w-full"
             />
           </div>
-          <div className="text-xs text-text-secondary">{filtered.length} result(s)</div>
+          <div className="text-xs text-text-secondary">
+            {loading ? 'Loading…' : `${filtered.length} result(s)`}
+          </div>
         </div>
 
+        {error && <div className="mt-4 text-red-600 font-semibold text-sm">{error}</div>}
+
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map((c) => (
-            <div key={c.id} className="border border-border rounded-2xl p-5 bg-white shadow-soft">
+          {loading ? (
+            <div className="lg:col-span-2 text-center text-text-secondary py-6">Loading…</div>
+          ) : (
+            filtered.map((c) => (
+            <div key={c._id} className="border border-border rounded-2xl p-5 bg-white shadow-soft">
               <div className="flex items-start justify-between gap-4">
                 <div className="leading-tight">
                   <p className="font-bold text-text-primary">{c.ticketId}</p>
@@ -77,11 +125,13 @@ export const Complaints = () => {
                 <Badge variant={badgeVariant(c.status)}>{c.status}</Badge>
               </div>
               <div className="mt-4 text-xs text-text-secondary">
-                Created {new Date(c.createdAt).toLocaleDateString()}
+                Created {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '—'}
               </div>
             </div>
-          ))}
-          {filtered.length === 0 && (
+            ))
+          )}
+
+          {!loading && !error && filtered.length === 0 && (
             <div className="text-center text-text-secondary py-12 border border-border rounded-2xl">
               No complaints found.
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import api, { extractApiData, extractApiPagination } from '../services/api';
 import { StatCard } from '../components/common/StatCard';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Search, Calendar, CreditCard, ChevronLeft, ChevronRight, XCircle, CheckCircle2, RefreshCcw, Wallet } from 'lucide-react';
@@ -14,10 +14,11 @@ export const Payments = () => {
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
-      const res: any = await api.get(`/payments?page=${page}&limit=5&search=${search}`);
-      const data = res.data || res;
-      setPayments(data.payments || (Array.isArray(data) ? data : []));
-      setTotalPages(res.pagination?.totalPages || data.pagination?.totalPages || data.totalPages || 1);
+      const envelope: any = await api.get(`/payments?page=${page}&limit=5&search=${search}`);
+      const data = extractApiData<{ payments: any[] }>(envelope, { payments: [] } as any);
+      setPayments(data.payments ?? []);
+      const pagination = extractApiPagination(envelope);
+      setTotalPages(pagination?.totalPages ?? 1);
     } catch (err) {
       console.warn('Failed to fetch payments');
       setPayments([]);

@@ -1,43 +1,25 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-
-const routeNames: Record<string, string> = {
-  '/': 'Dashboard',
-  '/bookings': 'Booking management',
-  '/operations-board': 'Operations board',
-  '/users': 'Users list',
-  '/workers': 'Worker list',
-  '/payments': 'Payment',
-  '/settings': 'Settings',
-  '/verification': 'Verification',
-  '/tickets': 'Tickets',
-  '/notifications': 'Notifications',
-  '/services': 'Services',
-  '/coupons': 'Coupons',
-  '/complaints': 'Complaints',
-  '/banners': 'Banners',
-};
+import { getRouteMetaByPath } from '../../config/routes';
 
 export const Navbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  let title =
-    routeNames[currentPath] ??
+  const routeMeta = getRouteMetaByPath(currentPath);
+  const title =
+    routeMeta?.title ??
     (currentPath === '/'
       ? 'Dashboard'
       : currentPath
-          .substring(1)
-          .split('/')[0]
-          .replace(/-/g, ' ')
-          .replace(/\b\w/g, (m) => m.toUpperCase()));
-  if (currentPath.includes('bookings/details')) title = 'Booking details';
-  else if (currentPath.includes('operations-board')) title = 'Operations board';
-  else if (currentPath.includes('bookings')) title = 'Booking management';
-  
+        .substring(1)
+        .split('/')[0]
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (m) => m.toUpperCase()));
+
   // Extract subtitle based on current route
-  const subTitle = currentPath === '/' ? 'Overview of the Maidyone!' : 
-                   currentPath.includes('bookings') ? 'Overview of the Maidyone!' :
-                   `Manage your ${currentPath.substring(1).split('/')[0]} here`;
+  const subTitle = currentPath === '/' ? 'Overview of the Maidyone!' :
+    currentPath.includes('bookings') ? 'Overview of the Maidyone!' :
+      `Manage your ${currentPath.substring(1).split('/')[0]} here`;
 
   return (
     <header className="min-w-0">

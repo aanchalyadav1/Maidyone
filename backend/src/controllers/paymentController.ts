@@ -1,39 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
 import Payment from '../models/Payment';
-import Booking from '../models/Booking';
-import Notification from '../models/Notification';
 import { sendResponse } from '../utils/responseHandler';
 
-// @desc    Fetch transactions
-// @route   GET /api/v1/payments
 export const getPayments = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { search, status, method, page = '1', limit = '10' } = req.query;
+    const { search, page = '1', limit = '10' } = req.query;
 
     const query: any = {};
-    if (status) query.status = status;
-    if (method) query.method = method;
     if (search) {
-      query.paymentId = { $regex: search as string, $options: 'i' };
+      query.$or = [
+        { paymentId: { $regex: search as string, $options: 'i' } }
+      ];
     }
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
     const startIndex = (pageNum - 1) * limitNum;
 
-    // Use lean() for read-heavy operations where methods aren't needed
     const payments = await Payment.find(query)
-      .populate('user', 'name email phoneNumber')
-      .populate('booking', 'bookingId status')
+      .populate('user', 'name email avatar')
+      .populate('booking')
       .skip(startIndex)
       .limit(limitNum)
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
 
     const total = await Payment.countDocuments(query);
 
-    sendResponse(res, 200, true, 'Payments fetched successfully', {
+    sendResponse(res, 200, true, 'Payments fetched', {
       payments,
       pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) }
     });
@@ -42,65 +35,27 @@ export const getPayments = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-// @desc    Record new payment (and update booking status)
-// @route   POST /api/v1/payments
 export const recordPayment = async (req: Request, res: Response, next: NextFunction) => {
-  // Start a transaction session for atomicity
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { bookingId, amount, method, status, transactionId } = req.body;
+    const { amount, method, status, userId, bookingId } = req.body;
 
-    if (!bookingId || !amount) {
-      throw { statusCode: 400, message: 'Booking ID and amount are required' };
+    if (!amount || !method || !userId) {
+      return sendResponse(res, 400, false, 'Amount, method and userId are required');
     }
 
-    // Verify booking exists
-    const booking = await Booking.findById(bookingId).session(session);
-    if (!booking) {
-      throw { statusCode: 404, message: 'Booking not found' };
-    }
+    const pId = `PAY-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    const uniquePayId = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const resolvedStatus = status || 'Completed';
-
-    const newPayment = new Payment({
-      paymentId: uniquePayId,
+    const payment = await Payment.create({
+      paymentId: pId,
+      user: userId,
       booking: bookingId,
-      user: booking.user,
       amount,
-      method: method || 'Card',
-      status: resolvedStatus,
-      transactionId
+      method,
+      status: status || 'Pending'
     });
 
-    const savedPayment = await newPayment.save({ session });
-
-    // Optional business logic: if payment completed, possibly update booking
-    if (resolvedStatus === 'Completed' && booking.status === 'Pending') {
-      booking.status = 'Confirmed';
-      await booking.save({ session });
-    }
-
-    // Auto-trigger notification
-    await Notification.create([{
-      recipient: booking.user,
-      title: `Payment ${resolvedStatus}`,
-      message: `Your payment of ${amount} for booking ${booking.bookingId} has been marked as ${resolvedStatus}.`,
-      type: 'Payment',
-      relatedId: uniquePayId
-    }], { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    sendResponse(res, 201, true, 'Payment recorded successfully', savedPayment);
-  } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
-    // Pass to global error handler
+    sendResponse(res, 201, true, 'Payment recorded', payment);
+  } catch (error) {
     next(error);
   }
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import api from '../services/api';
+import api, { extractApiData, extractApiPagination } from '../services/api';
 import { ChevronLeft, ChevronRight, Filter, Edit } from 'lucide-react';
 import { TableSkeleton } from '../components/common/Skeleton';
 
@@ -14,10 +14,11 @@ export const Users = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const res: any = await api.get(`/users?page=${page}&limit=${limit}&search=${search}`);
-      const data = res.data || res;
-      setUsers(data.users || (Array.isArray(data) ? data : []));
-      setTotalPages(res.pagination?.totalPages || data.totalPages || 1);
+      const envelope: any = await api.get(`/users?page=${page}&limit=${limit}&search=${search}`);
+      const data = extractApiData<{ users: any[] }>(envelope, { users: [] } as any);
+      setUsers(data.users ?? []);
+      const pagination = extractApiPagination(envelope);
+      setTotalPages(pagination?.totalPages ?? 1);
     } catch (err) {
       console.warn('Failed to fetch users');
       setUsers([]);
