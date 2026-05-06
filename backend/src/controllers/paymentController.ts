@@ -64,20 +64,22 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
 
     const uniquePayId = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    const resolvedStatus = status || 'Completed';
+
     const newPayment = new Payment({
       paymentId: uniquePayId,
       booking: bookingId,
       user: booking.user,
       amount,
       method: method || 'Card',
-      status: status || 'Completed',
+      status: resolvedStatus,
       transactionId
     });
 
     const savedPayment = await newPayment.save({ session });
 
     // Optional business logic: if payment completed, possibly update booking
-    if (status === 'Completed' && booking.status === 'Pending') {
+    if (resolvedStatus === 'Completed' && booking.status === 'Pending') {
       booking.status = 'Confirmed';
       await booking.save({ session });
     }
@@ -85,8 +87,8 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
     // Auto-trigger notification
     await Notification.create([{
       recipient: booking.user,
-      title: `Payment ${status}`,
-      message: `Your payment of ${amount} for booking ${booking.bookingId} has been marked as ${status}.`,
+      title: `Payment ${resolvedStatus}`,
+      message: `Your payment of ${amount} for booking ${booking.bookingId} has been marked as ${resolvedStatus}.`,
       type: 'Payment',
       relatedId: uniquePayId
     }], { session });

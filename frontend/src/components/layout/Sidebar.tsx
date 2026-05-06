@@ -13,13 +13,15 @@ import {
   Wrench,
   Tag,
   AlertCircle,
-  Image
+  Image,
+  Kanban
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Bookings management', path: '/bookings', icon: Calendar },
+  { name: 'Operations board', path: '/operations-board', icon: Kanban },
   { name: 'User', path: '/users', icon: Users },
   { name: 'Worker', path: '/workers', icon: UserSquare2 },
   { name: 'Payment', path: '/payments', icon: CreditCard },

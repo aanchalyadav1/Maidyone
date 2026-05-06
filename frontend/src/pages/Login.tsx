@@ -5,6 +5,7 @@ import { setCredentials } from "../features/auth/authSlice";
 import { Lock, Mail } from "lucide-react";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
+import { getApiV1BaseUrl } from "../config/apiBase";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ export const Login = () => {
 
   const syncWithBackend = async (token: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      const response = await fetch(`${getApiV1BaseUrl()}/auth/login`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

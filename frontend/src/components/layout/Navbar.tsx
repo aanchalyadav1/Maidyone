@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 const routeNames: Record<string, string> = {
   '/': 'Dashboard',
   '/bookings': 'Booking management',
+  '/operations-board': 'Operations board',
   '/users': 'Users list',
   '/workers': 'Worker list',
   '/payments': 'Payment',
@@ -30,6 +31,7 @@ export const Navbar = () => {
           .replace(/-/g, ' ')
           .replace(/\b\w/g, (m) => m.toUpperCase()));
   if (currentPath.includes('bookings/details')) title = 'Booking details';
+  else if (currentPath.includes('operations-board')) title = 'Operations board';
   else if (currentPath.includes('bookings')) title = 'Booking management';
   
   // Extract subtitle based on current route

@@ -85,6 +85,11 @@ export const getBookingById = async (req: Request, res: Response, next: NextFunc
 // @route   POST /api/v1/bookings
 export const createBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const authUserId = (req as any).user?._id;
+    if (!authUserId) {
+      return sendResponse(res, 401, false, 'Not authorized, user context missing');
+    }
+
     // Generate unique booking ID
     const bookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
     
@@ -96,7 +101,7 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
       bookingId,
       date: new Date(), // Enforce Server-time
       status: 'Pending', // Enforce default
-      user: (req as any).user._id // Automatically extracted from token/middleware
+      user: authUserId
     });
 
     const savedBooking = await newBooking.save();

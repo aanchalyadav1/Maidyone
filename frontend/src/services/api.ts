@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { store } from '../store';
 import { logout } from '../features/auth/authSlice';
+import { getApiV1BaseUrl } from '../config/apiBase';
 
 // Create base Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: getApiV1BaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
