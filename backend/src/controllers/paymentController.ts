@@ -4,9 +4,11 @@ import { sendResponse } from '../utils/responseHandler';
 
 export const getPayments = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { search, page = '1', limit = '10' } = req.query;
+    const { search, status, method, page = '1', limit = '10' } = req.query;
 
     const query: any = {};
+    if (status) query.status = status;
+    if (method) query.method = method;
     if (search) {
       query.$or = [
         { paymentId: { $regex: search as string, $options: 'i' } }
@@ -35,6 +37,76 @@ export const getPayments = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+export const getPaymentStats = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Total earnings (all completed)
+    const totalAgg = await Payment.aggregate([
+      { $match: { status: 'Completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalEarnings = totalAgg[0]?.total || 0;
+
+    // Pending payouts
+    const pendingAgg = await Payment.aggregate([
+      { $match: { status: 'Pending' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const pendingPayout = pendingAgg[0]?.total || 0;
+
+    // Refunded
+    const refundedAgg = await Payment.aggregate([
+      { $match: { status: 'Refunded' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalRefunded = refundedAgg[0]?.total || 0;
+
+    // Failed
+    const failedAgg = await Payment.aggregate([
+      { $match: { status: 'Failed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalFailed = failedAgg[0]?.total || 0;
+
+    // This month earnings
+    const thisMonthStart = new Date();
+    thisMonthStart.setDate(1);
+    thisMonthStart.setHours(0, 0, 0, 0);
+
+    const thisMonthAgg = await Payment.aggregate([
+      { $match: { status: 'Completed', createdAt: { $gte: thisMonthStart } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const thisMonthEarnings = thisMonthAgg[0]?.total || 0;
+
+    // Earnings trend (last 30 days grouped by date)
+    const earningsTrend = await Payment.aggregate([
+      { $match: { status: 'Completed', createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          Earnings: { $sum: '$amount' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, name: '$_id', Earnings: 1, Payout: { $multiply: ['$Earnings', 0.7] } } }
+    ]);
+
+    sendResponse(res, 200, true, 'Payment stats fetched', {
+      totalEarnings,
+      pendingPayout,
+      totalRefunded,
+      totalFailed,
+      thisMonthEarnings,
+      earningsTrend
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const recordPayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { amount, method, status, userId, bookingId } = req.body;
@@ -55,6 +127,27 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
     });
 
     sendResponse(res, 201, true, 'Payment recorded', payment);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePaymentStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['Pending', 'Completed', 'Failed', 'Refunded'];
+    if (!status || !allowed.includes(status)) {
+      return sendResponse(res, 400, false, 'Invalid status value');
+    }
+
+    const payment = await Payment.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!payment) return sendResponse(res, 404, false, 'Payment not found');
+    sendResponse(res, 200, true, 'Payment status updated', payment);
   } catch (error) {
     next(error);
   }

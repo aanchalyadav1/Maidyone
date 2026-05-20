@@ -129,7 +129,7 @@ export const AssignWorker = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-hide">
-            {workers.map((w) => (
+            {workers.map((w, idx) => (
               <div
                 key={w._id}
                 className="bg-white rounded-[16px] p-3 flex items-center justify-between shadow-sm border border-border hover:border-primary/50 transition duration-200"
@@ -137,11 +137,14 @@ export const AssignWorker = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative w-[48px] h-[48px]">
                     <img
-                      src={w.user?.avatar || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 60) + 1}`}
-                      className="w-full h-full rounded-full border-2 border-white shadow-sm"
+                      src={w.user?.avatar || `https://i.pravatar.cc/150?img=${(idx % 60) + 1}`}
+                      className="w-full h-full rounded-full border-2 border-white shadow-sm object-cover"
                       alt="Worker"
+                      onError={e => {
+                        (e.target as HTMLImageElement).src = `https://i.pravatar.cc/150?img=${(idx % 60) + 1}`;
+                      }}
                     />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-[1.5px] border-white"></div>
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-[1.5px] border-white ${w.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
                   </div>
                   <div className="leading-tight">
                     <h4 className="font-bold text-[14px] text-gray-800">{w.user?.name || 'Worker'}</h4>

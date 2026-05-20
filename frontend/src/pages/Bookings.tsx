@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
-import { StatusBadge } from '../components/common/StatusBadge';
 import { format } from 'date-fns';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { TableSkeleton } from '../components/common/Skeleton';
 
 interface Booking {
   _id: string;
   bookingId: string;
-  user: { name: string; email: string, avatar?: string };
+  user: { name: string; email: string; avatar?: string };
   worker?: { user: { name: string } };
   service: { name: string };
   date: string;
@@ -17,24 +16,23 @@ interface Booking {
   paymentStatus?: string;
 }
 
-
+const STATUS_OPTIONS = ['', 'Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
 
 export const Bookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination & Filtering state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [pendingStatus, setPendingStatus] = useState('');
 
-  // Example of debouncing search query
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 500);
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
@@ -42,32 +40,37 @@ export const Bookings = () => {
     try {
       setLoading(true);
       setError(null);
-      // Calls standard GET /bookings built in phase 6
-      const res: any = await api.get('/bookings', {
-        params: { page, limit: 10, search: debouncedSearch }
-      });
+      const params: any = { page, limit: 10 };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (statusFilter) params.status = statusFilter;
+      const res: any = await api.get('/bookings', { params });
       setBookings(res.data?.bookings || []);
       setTotalPages(res.pagination?.totalPages || res.data?.pagination?.totalPages || 1);
     } catch (err: any) {
-      setError("Failed to fetch bookings.");
+      setError('Failed to fetch bookings.');
       setBookings([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
+  const applyFilters = () => {
+    setStatusFilter(pendingStatus);
+    setPage(1);
+  };
+
   const renderStatus = (status: string) => {
-    let lower = status.toLowerCase();
-    let bg = 'bg-[#E1F7E3] text-[#1E7145]'; // Complete/Confirmed
+    const lower = status.toLowerCase();
+    let bg = 'bg-[#E1F7E3] text-[#1E7145]';
     if (lower === 'pending') bg = 'bg-[#FFF4D2] text-[#B88700]';
     if (lower === 'cancelled') bg = 'bg-[#FEE2E2] text-[#DC2626]';
-    if (lower === 'complete') bg = 'bg-[#3730A3] text-white'; // Indigo/Deep blue match
-
+    if (lower === 'in progress') bg = 'bg-blue-100 text-blue-700';
+    if (lower === 'confirmed') bg = 'bg-[#3730A3] text-white';
     return (
       <span className={`px-4 py-[6px] rounded-md text-xs font-bold ${bg}`}>
         {status}
@@ -80,8 +83,15 @@ export const Bookings = () => {
       <div className="bg-white px-5 py-5 sm:px-6 sm:py-6 rounded-[22px] shadow-soft border border-border min-h-[520px]">
         {/* Header Controls (Filters) */}
         <div className="flex flex-wrap items-center gap-3 mb-5">
-          <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
-            <option>Filter by Status</option>
+          <select
+            className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40"
+            value={pendingStatus}
+            onChange={e => setPendingStatus(e.target.value)}
+          >
+            <option value="">Filter by Status</option>
+            {STATUS_OPTIONS.filter(Boolean).map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
           <select className="border border-border rounded-xl px-4 py-3 min-h-[44px] text-[13px] text-text-secondary outline-none bg-white w-40">
             <option>Filter by Services</option>
@@ -97,15 +107,18 @@ export const Bookings = () => {
           </select>
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search here" 
+            <input
+              type="text"
+              placeholder="Search here"
               className="pl-4 pr-10 py-3 min-h-[44px] w-full border border-border rounded-xl text-[13px] outline-none focus:border-primary transition-colors text-text-primary bg-white"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="bg-primary text-white text-[13px] font-extrabold px-6 py-3 min-h-[44px] rounded-xl hover:bg-primary-dark transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+          <button
+            onClick={applyFilters}
+            className="bg-primary text-white text-[13px] font-extrabold px-6 py-3 min-h-[44px] rounded-xl hover:bg-primary-dark transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+          >
             Apply Filter
           </button>
         </div>

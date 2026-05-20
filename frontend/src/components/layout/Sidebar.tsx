@@ -1,5 +1,8 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../../features/auth/authSlice';
+import { RootState } from '../../store';
 import {
   LayoutDashboard,
   Calendar,
@@ -37,6 +40,18 @@ const iconMap = {
 } as const;
 
 export const Sidebar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const authUser = useSelector((state: RootState) => state.auth.user);
+
+  const displayName = authUser?.name || 'Admin';
+  const displayEmail = authUser?.email || '';
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="w-full h-full bg-gradient-to-b from-primary/90 via-primary-light/80 to-[#E9D060]/90 backdrop-blur-sm rounded-[34px] flex flex-col justify-between overflow-hidden relative shadow-soft border border-white/15">
       {/* Decorative blobs */}
@@ -46,9 +61,15 @@ export const Sidebar = () => {
 
       <div className="relative z-10 p-6 pt-7 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="flex flex-col items-center mb-8">
-          <img src="https://i.pravatar.cc/150?img=11" alt="Profile" className="w-[72px] h-[72px] rounded-full border-[3px] border-white mb-3 shadow-md" />
-          <h2 className="text-white font-bold text-[17px]">Mr. Raj</h2>
-          <p className="text-white/80 text-xs">Email.raj@gmail.com</p>
+          <img
+            src={`https://i.pravatar.cc/150?u=${encodeURIComponent(displayEmail || displayName)}`}
+            alt="Profile"
+            className="w-[72px] h-[72px] rounded-full border-[3px] border-white mb-3 shadow-md"
+          />
+          <h2 className="text-white font-bold text-[17px] truncate max-w-[180px] text-center">{displayName}</h2>
+          {displayEmail && (
+            <p className="text-white/80 text-xs truncate max-w-[180px] text-center">{displayEmail}</p>
+          )}
         </div>
 
         <nav className="flex flex-col gap-2">
@@ -76,7 +97,10 @@ export const Sidebar = () => {
       </div>
 
       <div className="relative z-10 p-6 pt-2 pb-8">
-        <button className="flex items-center justify-center w-[120px] mx-auto gap-2 px-4 py-3 bg-[#000000] text-white rounded-full hover:bg-black/80 transition-colors shadow-lg">
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center w-[120px] mx-auto gap-2 px-4 py-3 bg-[#000000] text-white rounded-full hover:bg-black/80 transition-colors shadow-lg"
+        >
           <span className="font-bold text-[13px] font-['Nunito']">Log Out</span>
         </button>
       </div>

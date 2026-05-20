@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api, { extractApiData, extractApiPagination } from '../services/api';
-import { ChevronLeft, ChevronRight, Filter, Edit, Eye, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Eye, MessageSquare } from 'lucide-react';
 import { TableSkeleton } from '../components/common/Skeleton';
 
 export const Tickets = () => {

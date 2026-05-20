@@ -15,7 +15,7 @@ export const OperationsBoard = () => {
       try {
         setLoading(true);
         const res: any = await api.get('/bookings');
-        const tasks = res.data.bookings || [];
+        const tasks = res.data?.bookings || [];
         
         const grouped = {
           Pending: tasks.filter((t: any) => t.status === 'Pending'),
@@ -32,38 +32,53 @@ export const OperationsBoard = () => {
     fetchBoardTasks();
   }, []);
 
-  const Column = ({ title, count, tasks, bgBase, textHeader, icon }: any) => (
-    <div className={`flex flex-col flex-1 border border-border bg-white rounded-[24px] overflow-hidden min-h-[600px] shadow-sm`}>
+  const Column = ({ title, count, tasks, bgBase, textHeader }: any) => (
+    <div className="flex flex-col flex-1 border border-border bg-white rounded-[24px] overflow-hidden min-h-[600px] shadow-sm">
       <div className="flex justify-between items-center px-5 py-4 border-b border-border/50">
         <h3 className={`font-bold text-[15px] flex items-center gap-2 ${textHeader}`}>
-          <span className={`w-2 h-2 rounded-full ${bgBase}`}></span> {title}
+          <span className={`w-2 h-2 rounded-full ${bgBase}`} /> {title}
           <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full ml-1">{count}</span>
         </h3>
         <button className="text-gray-400 hover:text-gray-700">•••</button>
       </div>
-      <div className={`flex-1 p-4 flex flex-col gap-4 bg-gray-50/30 overflow-y-auto`}>
+      <div className="flex-1 p-4 flex flex-col gap-4 bg-gray-50/30 overflow-y-auto">
         {tasks.map((t: any, i: number) => (
-          <div key={i} className="bg-white border border-border/60 hover:shadow-md transition-shadow rounded-xl p-4 flex flex-col gap-3">
-             <div className="flex justify-between items-start">
-               <div>
-                  <span className="text-[10px] text-gray-400 font-bold tracking-wider">{t.bookingId || `#BK-${Math.floor(1000+Math.random()*9000)}`}</span>
-                  <h4 className="font-bold text-[14px] text-gray-800 mt-1">{t.service?.name || 'Assigned Service'}</h4>
-               </div>
-               <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${bgBase} bg-opacity-20 ${textHeader}`}>
-                  {t.service?.category || 'Category'}
-               </span>
-             </div>
-             
-             <div className="flex items-center gap-2 mt-1">
-               <img src={t.user?.avatar || `https://i.pravatar.cc/150?img=${i+10}`} className="w-6 h-6 rounded-full border border-gray-200" alt="avatar" />
-               <p className="text-[12px] text-gray-600 font-medium">{t.user?.name || 'Customer'}</p>
-             </div>
-             
-             <div className="flex items-center justify-between text-[11px] text-gray-500 mt-2">
-               <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5"/> {t.date ? new Date(t.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : 'Today'}</div>
-               {title === 'Completed' && <div className="flex items-center gap-1 text-green-500 font-medium"><CheckCircle2 className="w-3.5 h-3.5"/> Done</div>}
-               {title === 'In Progress' && <div className="flex items-center gap-1 text-[#1A73E8] font-medium"><div className="w-1.5 h-1.5 rounded-full bg-[#1A73E8]"></div> Active</div>}
-             </div>
+          <div key={t._id || i} className="bg-white border border-border/60 hover:shadow-md transition-shadow rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] text-gray-400 font-bold tracking-wider">{t.bookingId || '—'}</span>
+                <h4 className="font-bold text-[14px] text-gray-800 mt-1">{t.service?.name || 'Assigned Service'}</h4>
+              </div>
+              <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${bgBase} bg-opacity-20 ${textHeader}`}>
+                {t.service?.category || 'Category'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 mt-1">
+              <img
+                src={t.user?.avatar || `https://i.pravatar.cc/150?img=${(i % 70) + 10}`}
+                className="w-6 h-6 rounded-full border border-gray-200 object-cover"
+                alt="avatar"
+              />
+              <p className="text-[12px] text-gray-600 font-medium">{t.user?.name || 'Customer'}</p>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-gray-500 mt-2">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                {t.date ? new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'}
+              </div>
+              {title === 'Completed' && (
+                <div className="flex items-center gap-1 text-green-500 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Done
+                </div>
+              )}
+              {title === 'In Progress' && (
+                <div className="flex items-center gap-1 text-[#1A73E8] font-medium">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#1A73E8]" /> Active
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

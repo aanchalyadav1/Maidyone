@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Building2, Users, Receipt, Phone, Mail, Loader2 } from 'lucide-react';
-import api, { extractApiData, extractApiPagination, normalizeApiError } from '../services/api';
+import api, { extractApiData, normalizeApiError } from '../services/api';
 
 export const BookingDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<any>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>('Not paid');
   const [paymentMethod, setPaymentMethod] = useState<string>('—');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -127,9 +129,10 @@ export const BookingDetails = () => {
         {/* Left Column - User Profile */}
         <div className="lg:col-span-3 bg-white p-8 rounded-[24px] shadow-sm border border-border flex flex-col items-center">
           <img
-            src={booking.user?.avatar}
+            src={booking.user?.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(booking.user?.email || booking.user?.name || 'user')}`}
             alt={booking.user?.name || 'User'}
-            className="w-[100px] h-[100px] rounded-full border-4 border-gray-50 mb-4"
+            className="w-[100px] h-[100px] rounded-full border-4 border-gray-50 mb-4 object-cover"
+            onError={e => { (e.target as HTMLImageElement).src = 'https://i.pravatar.cc/150?img=11'; }}
           />
           <h3 className="font-bold text-lg mb-1">{booking.user?.name}</h3>
           <p className="text-primary text-[13px] font-medium mb-3 hover:underline cursor-pointer">{booking.user?.email}</p>
@@ -255,13 +258,33 @@ export const BookingDetails = () => {
 
          {/* Right Bottom Actions */}
          <div className="flex items-end justify-end gap-3 pb-2 pt-16">
-            <button className="bg-[#1496A3] text-white font-bold text-[14px] px-6 py-2.5 rounded-[10px] hover:bg-primary-dark transition-colors shadow-sm">Edit Booking</button>
+            <button
+              onClick={() => navigate(`/bookings/assign/${booking._id}`)}
+              className="bg-[#1496A3] text-white font-bold text-[14px] px-6 py-2.5 rounded-[10px] hover:bg-primary-dark transition-colors shadow-sm"
+            >
+              Assign Worker
+            </button>
             <button className="bg-white border border-border text-text-primary font-bold text-[14px] flex items-center gap-2 px-5 py-2.5 rounded-[10px] hover:bg-gray-50 transition-colors shadow-sm">
                <Mail className="w-4 h-4" /> Send Message
             </button>
-            <button className="bg-[#EF4444] text-white font-bold text-[14px] flex items-center gap-2 px-5 py-2.5 rounded-[10px] hover:bg-red-600 transition-colors shadow-sm text-center">
+            <button
+              disabled={cancelling || booking.status === 'Cancelled'}
+              onClick={async () => {
+                if (!confirm('Cancel this booking?')) return;
+                try {
+                  setCancelling(true);
+                  await api.patch(`/bookings/${booking._id}/status`, { status: 'Cancelled' });
+                  setBooking((prev: any) => ({ ...prev, status: 'Cancelled' }));
+                } catch (e: any) {
+                  alert(normalizeApiError(e, 'Failed to cancel booking'));
+                } finally {
+                  setCancelling(false);
+                }
+              }}
+              className="bg-[#EF4444] text-white font-bold text-[14px] flex items-center gap-2 px-5 py-2.5 rounded-[10px] hover:bg-red-600 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
-               Cancel Booking
+               {cancelling ? 'Cancelling…' : booking.status === 'Cancelled' ? 'Cancelled' : 'Cancel Booking'}
             </button>
          </div>
       </div>
