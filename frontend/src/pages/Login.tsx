@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
 import {
   signInWithEmailAndPassword,
@@ -10,48 +9,41 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 import { isAdminEmail } from '../config/adminWhitelist';
-import { useEffect } from 'react';
+
+// NOTE: Login does NOT call navigate() after login.
+// App.tsx wraps <Login> with:
+//   isAuthenticated ? <Navigate to="/" replace /> : <Login />
+// So once onAuthStateChanged fires and sets isAuthenticated=true,
+// React Router automatically replaces this route with the dashboard.
+// This eliminates the race condition between navigate() and onAuthStateChanged.
 
 export const Login = () => {
-  const [email, setEmail]     = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]     = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
+  const [error, setError]       = useState<string | null>(null);
+  const [loading, setLoading]   = useState(false);
 
   // ── Handle Google redirect result on page load ──────────────────────────
-  // On mobile or when popups are blocked, signInWithRedirect is used.
-  // getRedirectResult picks up the result after the page reloads.
+  // When signInWithRedirect is used (popup blocked), Firebase redirects back
+  // to this page. getRedirectResult picks up the result.
   useEffect(() => {
     getRedirectResult(auth)
       .then((result) => {
-        if (!result) return; // no redirect in progress
+        if (!result) return;
         if (!isAdminEmail(result.user.email)) {
           auth.signOut();
           setError('Access denied. This email is not authorized as an admin.');
-          return;
         }
-        // onAuthStateChanged in App.tsx will handle session — just navigate
-        navigate('/', { replace: true });
+        // If admin — onAuthStateChanged in App.tsx fires automatically,
+        // sets isAuthenticated=true, and the Login route redirects to "/"
       })
       .catch((err: any) => {
+        // auth/no-auth-event is normal when there's no redirect in progress
         if (err.code !== 'auth/no-auth-event') {
           setError(err.message || 'Google sign-in failed.');
         }
       });
-  }, [navigate]);
-
-  // ── Validate admin access after Firebase login ───────────────────────────
-  const handleAdminCheck = async (userEmail: string | null): Promise<void> => {
-    if (!isAdminEmail(userEmail)) {
-      // Sign out immediately — not an admin
-      await auth.signOut();
-      throw new Error('Access denied. This email is not authorized as an admin.');
-    }
-    // onAuthStateChanged in App.tsx will set the session and redirect
-    navigate('/', { replace: true });
-  };
+  }, []);
 
   // ── Email + Password login ───────────────────────────────────────────────
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -64,7 +56,13 @@ export const Login = () => {
       setLoading(true);
       setError(null);
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      await handleAdminCheck(credential.user.email);
+
+      if (!isAdminEmail(credential.user.email)) {
+        await auth.signOut();
+        setError('Access denied. This email is not authorized as an admin.');
+        return;
+      }
+      // onAuthStateChanged fires → setSession → App.tsx redirects to "/"
     } catch (err: any) {
       const code = err.code as string | undefined;
       if (
@@ -87,39 +85,34 @@ export const Login = () => {
   };
 
   // ── Google Sign-In ───────────────────────────────────────────────────────
-  // Try popup first; fall back to redirect if popup is blocked
-  // (common on Render production with strict COOP headers).
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let userEmail: string | null = null;
-
+      let result;
       try {
-        // Attempt popup with explicit resolver (fixes COOP issues on some browsers)
-        const result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
-        userEmail = result.user.email;
+        result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       } catch (popupErr: any) {
-        // Popup blocked or COOP issue — fall back to redirect flow
-        if (
-          popupErr.code === 'auth/popup-blocked' ||
-          popupErr.code === 'auth/popup-closed-by-user' ||
-          popupErr.code === 'auth/cancelled-popup-request'
-        ) {
-          if (popupErr.code === 'auth/popup-closed-by-user') {
-            // User dismissed — not an error
-            setLoading(false);
-            return;
-          }
-          // Use redirect as fallback
+        if (popupErr.code === 'auth/popup-closed-by-user' ||
+            popupErr.code === 'auth/cancelled-popup-request') {
+          // User dismissed — not an error
+          return;
+        }
+        if (popupErr.code === 'auth/popup-blocked') {
+          // Popup blocked — fall back to redirect
           await signInWithRedirect(auth, googleProvider);
-          return; // page will reload; getRedirectResult handles the rest
+          return; // page reloads; getRedirectResult handles the rest
         }
         throw popupErr;
       }
 
-      await handleAdminCheck(userEmail);
+      if (!isAdminEmail(result.user.email)) {
+        await auth.signOut();
+        setError('Access denied. This email is not authorized as an admin.');
+        return;
+      }
+      // onAuthStateChanged fires → setSession → App.tsx redirects to "/"
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message || 'Google sign-in failed. Please try again.');
@@ -151,7 +144,6 @@ export const Login = () => {
         <h2 className="text-gray-800 text-lg font-semibold mb-1">Sign in</h2>
         <p className="text-gray-600 text-sm mb-6 text-center">Hi, Welcome Back, you've been missed</p>
 
-        {/* Error banner */}
         {error && (
           <div className="w-full mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />

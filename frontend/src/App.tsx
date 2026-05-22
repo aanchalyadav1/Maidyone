@@ -8,39 +8,40 @@ import { RootState } from './store';
 import { setSession, clearSession } from './features/auth/authSlice';
 import { AdminLayout } from './components/layout/AdminLayout';
 
-import { Dashboard }      from './pages/Dashboard';
-import { Bookings }       from './pages/Bookings';
-import { BookingDetails } from './pages/BookingDetails';
-import { Users }          from './pages/Users';
-import { Workers }        from './pages/Workers';
-import { Services }       from './pages/Services';
-import { Payments }       from './pages/Payments';
-import { Tickets }        from './pages/Tickets';
-import { Notifications }  from './pages/Notifications';
-import { Login }          from './pages/Login';
+import { Dashboard }       from './pages/Dashboard';
+import { Bookings }        from './pages/Bookings';
+import { BookingDetails }  from './pages/BookingDetails';
+import { Users }           from './pages/Users';
+import { Workers }         from './pages/Workers';
+import { Services }        from './pages/Services';
+import { Payments }        from './pages/Payments';
+import { Tickets }         from './pages/Tickets';
+import { Notifications }   from './pages/Notifications';
+import { Login }           from './pages/Login';
 import { OperationsBoard } from './pages/OperationsBoard';
-import { AssignWorker }   from './pages/AssignWorker';
-import { Settings }       from './pages/Settings';
-import { Verification }   from './pages/Verification';
-import { Coupons }        from './pages/Coupons';
-import { Complaints }     from './pages/Complaints';
-import { Banners }        from './pages/Banners';
+import { AssignWorker }    from './pages/AssignWorker';
+import { Settings }        from './pages/Settings';
+import { Verification }    from './pages/Verification';
+import { Coupons }         from './pages/Coupons';
+import { Complaints }      from './pages/Complaints';
+import { Banners }         from './pages/Banners';
 import { APP_ROUTES, AppRouteKey } from './config/routes';
+
+// ─── Loading spinner ──────────────────────────────────────────────────────────
+const AuthLoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#F4F6F8]">
+    <div className="w-10 h-10 border-4 border-[#0EA5A4]/30 border-t-[#0EA5A4] rounded-full animate-spin" />
+  </div>
+);
 
 // ─── ProtectedRoute ───────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useSelector((state: RootState) => state.auth);
 
-  // While Firebase is resolving the session on startup, show nothing
-  // (avoids a flash-redirect to /login on page refresh)
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Show spinner only while Firebase is resolving on a fresh (no cached) session
+  if (loading) return <AuthLoadingScreen />;
 
+  // Not authenticated — send to login
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
@@ -49,30 +50,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // ─── App ──────────────────────────────────────────────────────────────────────
 function App() {
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   // ── Single source of truth: Firebase onAuthStateChanged ──────────────────
-  // This runs once on mount and fires whenever the Firebase session changes
-  // (login, logout, token refresh, page reload).
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        // No Firebase session — clear everything
         dispatch(clearSession());
         return;
       }
 
-      // Check admin whitelist — only whitelisted emails get in
+      // Whitelist check
       if (!isAdminEmail(firebaseUser.email)) {
-        // Valid Firebase user but not an admin — sign them out silently
         await auth.signOut();
         dispatch(clearSession());
         return;
       }
 
       try {
-        // Get a fresh Firebase ID token (auto-refreshed by Firebase SDK)
         const token = await firebaseUser.getIdToken();
-
         dispatch(setSession({
           user: {
             uid:         firebaseUser.uid,
@@ -82,37 +78,42 @@ function App() {
           token,
         }));
       } catch {
-        // Token fetch failed — clear session
         dispatch(clearSession());
       }
     });
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
   }, [dispatch]);
 
+  // Page-level elements map
   const routeElements: Record<AppRouteKey, React.ReactNode> = {
-    dashboard:        <Dashboard />,
-    bookings:         <Bookings />,
-    'booking-details': <BookingDetails />,
-    users:            <Users />,
-    workers:          <Workers />,
-    payments:         <Payments />,
-    settings:         <Settings />,
-    verification:     <Verification />,
-    tickets:          <Tickets />,
+    dashboard:          <Dashboard />,
+    bookings:           <Bookings />,
+    'booking-details':  <BookingDetails />,
+    users:              <Users />,
+    workers:            <Workers />,
+    payments:           <Payments />,
+    settings:           <Settings />,
+    verification:       <Verification />,
+    tickets:            <Tickets />,
     'operations-board': <OperationsBoard />,
-    'assign-worker':  <AssignWorker />,
-    notifications:    <Notifications />,
-    services:         <Services />,
-    coupons:          <Coupons />,
-    complaints:       <Complaints />,
-    banners:          <Banners />,
+    'assign-worker':    <AssignWorker />,
+    notifications:      <Notifications />,
+    services:           <Services />,
+    coupons:            <Coupons />,
+    complaints:         <Complaints />,
+    banners:            <Banners />,
   };
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      {/* Login — redirect to dashboard if already authenticated */}
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+      />
+
+      {/* Admin panel — all nested routes under "/" */}
       <Route
         path="/"
         element={
@@ -122,17 +123,33 @@ function App() {
         }
       >
         {APP_ROUTES.map((route) => {
-          const routePath = route.path === '/' ? '' : route.path.replace(/^\//, '');
+          // dashboard has path '/' → render as index route
+          if (route.path === '/') {
+            return (
+              <Route
+                key={route.key}
+                index
+                element={routeElements[route.key]}
+              />
+            );
+          }
+          // All other routes: strip leading slash
+          const relativePath = route.path.replace(/^\//, '');
           return (
             <Route
               key={route.key}
-              index={route.path === '/'}
-              path={route.path === '/' ? undefined : routePath}
+              path={relativePath}
               element={routeElements[route.key]}
             />
           );
         })}
+
+        {/* Catch-all inside admin panel — redirect unknown paths to dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
+      {/* Global catch-all — redirect anything else to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

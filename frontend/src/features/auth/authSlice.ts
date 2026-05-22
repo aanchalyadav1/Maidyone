@@ -48,7 +48,12 @@ const initialState: AuthState = {
   user:            isConsistent ? storedUser  : null,
   token:           isConsistent ? storedToken : null,
   isAuthenticated: isConsistent,
-  loading:         true, // start as true — resolved by onAuthStateChanged in App
+  // If we have a consistent cached session, start as NOT loading —
+  // onAuthStateChanged will still run and update the token, but the
+  // user won't see a blank spinner on every page refresh.
+  // If no cached session, start as true so ProtectedRoute waits for
+  // Firebase to resolve before redirecting to /login.
+  loading:         !isConsistent,
 };
 
 const authSlice = createSlice({
