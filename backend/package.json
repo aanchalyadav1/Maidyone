@@ -9,7 +9,7 @@
 "dev": "nodemon src/server.ts",
 "build": "tsc -p tsconfig.json",
 "seed": "ts-node src/seed.ts",
-"test": "echo "No tests configured" && exit 0"
+"test": "echo \"No tests configured\" && exit 0"
 },
 "keywords": [],
 "author": "",
