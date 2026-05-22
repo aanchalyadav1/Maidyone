@@ -1,13 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import path from 'path';
+import { Response, NextFunction } from 'express';
+import { Request } from 'express';
 import { sendResponse } from '../utils/responseHandler';
+
+// Extend Express Request to include multer's file property
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
 
 // @desc    Upload a file (banner image, worker document, etc.)
 // @route   POST /api/v1/upload?folder=banners
-export const uploadFile = (req: Request, res: Response, next: NextFunction) => {
+export const uploadFile = (req: MulterRequest, res: Response, next: NextFunction): void => {
   try {
     if (!req.file) {
-      return sendResponse(res, 400, false, 'No file uploaded');
+      sendResponse(res, 400, false, 'No file uploaded');
+      return;
     }
 
     // Build the public URL using the configured API base URL (not req.protocol/host
@@ -22,8 +28,8 @@ export const uploadFile = (req: Request, res: Response, next: NextFunction) => {
     sendResponse(res, 200, true, 'File uploaded successfully', {
       filename: req.file.filename,
       mimetype: req.file.mimetype,
-      size: req.file.size,
-      url: fileUrl,
+      size:     req.file.size,
+      url:      fileUrl,
     });
   } catch (error) {
     next(error);
