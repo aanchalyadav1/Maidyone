@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Camera, CheckCircle2 } from 'lucide-react';
 import api, { extractApiData, normalizeApiError } from '../services/api';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setCredentials } from '../features/auth/authSlice';
 
 export const Settings = () => {
   const [activeTab, setActiveTab] = useState('Profile Settings');
-  const dispatch = useDispatch();
   const authUser = useSelector((state: RootState) => state.auth.user);
-  const token = useSelector((state: RootState) => state.auth.token);
 
   // Profile form state
   const [profile, setProfile] = useState({
@@ -61,19 +58,9 @@ export const Settings = () => {
       if (profile.avatar.trim()) payload.avatar = profile.avatar.trim();
 
       const envelope: any = await api.patch('/settings/profile', payload);
-      const data = extractApiData<any>(envelope, {});
 
-      // Update Redux store — setCredentials already persists to localStorage
-      if (authUser && token) {
-        dispatch(setCredentials({
-          user: {
-            ...authUser,
-            name: data.name || authUser.name,
-            email: data.email || authUser.email,
-          },
-          token,
-        }));
-      }
+      // Profile saved to MongoDB — no need to update Firebase auth state.
+      // The sidebar reads displayName from Firebase directly via onAuthStateChanged.
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -225,7 +212,7 @@ export const Settings = () => {
             <div className="flex flex-col gap-4 text-[12px]">
               <div className="flex justify-between items-center">
                 <span className="text-[#6B7280]">Role</span>
-                <span className="font-bold text-[#111827] capitalize">{authUser?.role || 'Admin'}</span>
+                <span className="font-bold text-[#111827] capitalize">Admin</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#6B7280]">Email</span>

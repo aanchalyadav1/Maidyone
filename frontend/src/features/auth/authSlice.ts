@@ -1,87 +1,93 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface User {
-  uid: string;
-  name: string;
-  email?: string | null;
-  phoneNumber?: string | null;
-  role: 'admin' | 'worker' | 'user';
+// Minimal safe auth info — no role, no MongoDB fields
+export interface AuthUser {
+  uid:         string;
+  email:       string | null;
+  displayName: string | null;
 }
 
 interface AuthState {
-  user: User | null;
-  token: string | null;
+  user:            AuthUser | null;
+  token:           string | null;   // Firebase ID token (refreshed by onAuthStateChanged)
   isAuthenticated: boolean;
-  loading: boolean;
+  loading:         boolean;         // true while onAuthStateChanged is resolving on startup
 }
 
 // ─── Safe localStorage hydration ─────────────────────────────────────────────
-// Validate that stored data has the expected shape before trusting it.
-const safeParseUser = (raw: string | null): User | null => {
+// Only restore if both token and user are present and well-formed.
+// This is a best-effort cache — onAuthStateChanged will always be the
+// authoritative source and will overwrite this on mount.
+const safeParseUser = (raw: string | null): AuthUser | null => {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    // Must have uid and a valid role — reject anything else
-    if (
-      typeof parsed !== 'object' ||
-      typeof parsed.uid !== 'string' ||
-      !['admin', 'worker', 'user'].includes(parsed.role)
-    ) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+    if (typeof parsed !== 'object' || typeof parsed.uid !== 'string') {
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
       return null;
     }
-    return parsed as User;
+    return { uid: parsed.uid, email: parsed.email ?? null, displayName: parsed.displayName ?? null };
   } catch {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
     return null;
   }
 };
 
-const storedToken = localStorage.getItem('token');
-const storedUser  = safeParseUser(localStorage.getItem('user'));
-
-// If token exists but user is invalid (or vice versa), clear both
+const storedToken = localStorage.getItem('auth_token');
+const storedUser  = safeParseUser(localStorage.getItem('auth_user'));
 const isConsistent = !!(storedToken && storedUser);
+
 if (!isConsistent) {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_user');
 }
 
 const initialState: AuthState = {
   user:            isConsistent ? storedUser  : null,
   token:           isConsistent ? storedToken : null,
   isAuthenticated: isConsistent,
-  loading:         false,
+  loading:         true, // start as true — resolved by onAuthStateChanged in App
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    // Called by onAuthStateChanged when a valid admin session is confirmed
+    setSession: (state, action: PayloadAction<{ user: AuthUser; token: string }>) => {
       state.user            = action.payload.user;
       state.token           = action.payload.token;
       state.isAuthenticated = true;
       state.loading         = false;
-      // Persist to localStorage
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('auth_token', action.payload.token);
+      localStorage.setItem('auth_user', JSON.stringify(action.payload.user));
     },
-    logout: (state) => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    // Called by onAuthStateChanged when no user / token refresh / logout
+    clearSession: (state) => {
       state.user            = null;
       state.token           = null;
       state.isAuthenticated = false;
       state.loading         = false;
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      // Also clear legacy keys from old auth system
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
+    // Called while onAuthStateChanged is still resolving
+    setAuthLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
   },
 });
 
-export const { setCredentials, logout, setLoading } = authSlice.actions;
+export const { setSession, clearSession, setAuthLoading } = authSlice.actions;
+
+// Keep backward-compatible aliases so existing pages that import
+// setCredentials / logout don't break
+export const setCredentials = setSession;
+export const logout         = clearSession;
+
 export default authSlice.reducer;

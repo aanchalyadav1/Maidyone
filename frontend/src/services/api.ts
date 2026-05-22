@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { store } from '../store';
-import { logout } from '../features/auth/authSlice';
+import { clearSession } from '../features/auth/authSlice';
 import { getApiV1BaseUrl } from '../config/apiBase';
+import { auth } from '../config/firebase';
 
 export interface ApiEnvelope<T> {
   success: boolean;
@@ -30,48 +31,60 @@ export const normalizeApiError = (error: unknown, fallbackMessage = 'Request fai
   return err?.response?.data?.message || err?.message || fallbackMessage;
 };
 
-// Create base Axios instance
+// ─── Axios instance ───────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: getApiV1BaseUrl(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Add a request interceptor to inject the token
+// ─── Request interceptor — always use a fresh Firebase ID token ───────────────
+// Firebase SDK auto-refreshes the token when it's within 5 minutes of expiry.
+// Calling getIdToken() here ensures we never send a stale token to the backend.
 api.interceptors.request.use(
-  (config) => {
-    // We would pull the Firebase Custom Token from our Redux state
-    const token = store.getState().auth.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+      try {
+        // forceRefresh=false — Firebase will refresh automatically when needed
+        const token = await firebaseUser.getIdToken(false);
+        config.headers.Authorization = `Bearer ${token}`;
+        // Also keep Redux store in sync with the latest token
+        store.dispatch({ type: 'auth/setSession', payload: {
+          user: {
+            uid:         firebaseUser.uid,
+            email:       firebaseUser.email,
+            displayName: firebaseUser.displayName,
+          },
+          token,
+        }});
+      } catch {
+        // Token fetch failed — clear session and let the 401 handler redirect
+      }
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle errors globally
+// ─── Response interceptor ─────────────────────────────────────────────────────
 api.interceptors.response.use(
-  (response) => {
-    // the backend uses { success, message, data } wrapper
-    return response.data;
-  },
-  (error) => {
+  (response) => response.data, // unwrap the { success, message, data } envelope
+  async (error) => {
     const status = error.response?.status;
 
     if (status === 401) {
-      // Token expired or invalid — force logout and redirect
-      store.dispatch(logout());
-      // Only redirect if not already on login page
+      // Token rejected by backend — sign out of Firebase and clear session
+      await auth.signOut();
+      store.dispatch(clearSession());
       if (window.location.pathname !== '/login') {
         window.location.replace('/login');
       }
     }
 
     if (status === 403) {
-      // Forbidden — user lost admin role mid-session
-      store.dispatch(logout());
+      // Forbidden — clear session and redirect
+      await auth.signOut();
+      store.dispatch(clearSession());
       window.location.replace('/login');
     }
 

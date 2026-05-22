@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../features/auth/authSlice';
+import { clearSession } from '../../features/auth/authSlice';
+import { auth } from '../../config/firebase';
 import { RootState } from '../../store';
 import {
   LayoutDashboard,
@@ -44,11 +45,13 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const authUser = useSelector((state: RootState) => state.auth.user);
 
-  const displayName = authUser?.name || 'Admin';
+  // AuthUser has displayName (Firebase) not name (old MongoDB shape)
+  const displayName  = authUser?.displayName || authUser?.email?.split('@')[0] || 'Admin';
   const displayEmail = authUser?.email || '';
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    await auth.signOut();          // sign out of Firebase
+    dispatch(clearSession());      // clear Redux + localStorage
     navigate('/login', { replace: true });
   };
 

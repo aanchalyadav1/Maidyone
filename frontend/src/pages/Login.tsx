@@ -1,47 +1,59 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setCredentials } from '../features/auth/authSlice';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  browserPopupRedirectResolver,
+} from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
-import { getApiV1BaseUrl } from '../config/apiBase';
+import { isAdminEmail } from '../config/adminWhitelist';
+import { useEffect } from 'react';
 
 export const Login = () => {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]       = useState<string | null>(null);
-  const [loading, setLoading]   = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const dispatch  = useDispatch();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
-  const syncWithBackend = async (token: string): Promise<void> => {
-    const response = await fetch(`${getApiV1BaseUrl()}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  // ── Handle Google redirect result on page load ──────────────────────────
+  // On mobile or when popups are blocked, signInWithRedirect is used.
+  // getRedirectResult picks up the result after the page reloads.
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (!result) return; // no redirect in progress
+        if (!isAdminEmail(result.user.email)) {
+          auth.signOut();
+          setError('Access denied. This email is not authorized as an admin.');
+          return;
+        }
+        // onAuthStateChanged in App.tsx will handle session — just navigate
+        navigate('/', { replace: true });
+      })
+      .catch((err: any) => {
+        if (err.code !== 'auth/no-auth-event') {
+          setError(err.message || 'Google sign-in failed.');
+        }
+      });
+  }, [navigate]);
 
-    const data = await response.json();
-
-    if (!response.ok || !data?.data) {
-      throw new Error(data?.message || 'Login failed. Please try again.');
+  // ── Validate admin access after Firebase login ───────────────────────────
+  const handleAdminCheck = async (userEmail: string | null): Promise<void> => {
+    if (!isAdminEmail(userEmail)) {
+      // Sign out immediately — not an admin
+      await auth.signOut();
+      throw new Error('Access denied. This email is not authorized as an admin.');
     }
-
-    const { user, token: returnedToken } = data.data;
-
-    // Enforce admin-only access at the frontend level
-    if (user.role !== 'admin') {
-      throw new Error('Access denied. This panel is for administrators only.');
-    }
-
-    dispatch(setCredentials({ user, token: returnedToken }));
+    // onAuthStateChanged in App.tsx will set the session and redirect
     navigate('/', { replace: true });
   };
 
+  // ── Email + Password login ───────────────────────────────────────────────
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -52,12 +64,15 @@ export const Login = () => {
       setLoading(true);
       setError(null);
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const token = await credential.user.getIdToken();
-      await syncWithBackend(token);
+      await handleAdminCheck(credential.user.email);
     } catch (err: any) {
-      // Map Firebase error codes to user-friendly messages
       const code = err.code as string | undefined;
-      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      if (
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential' ||
+        code === 'auth/invalid-email'
+      ) {
         setError('Invalid email or password.');
       } else if (code === 'auth/too-many-requests') {
         setError('Too many failed attempts. Please try again later.');
@@ -71,17 +86,42 @@ export const Login = () => {
     }
   };
 
+  // ── Google Sign-In ───────────────────────────────────────────────────────
+  // Try popup first; fall back to redirect if popup is blocked
+  // (common on Render production with strict COOP headers).
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       setError(null);
-      const credential = await signInWithPopup(auth, googleProvider);
-      const token = await credential.user.getIdToken();
-      await syncWithBackend(token);
+
+      let userEmail: string | null = null;
+
+      try {
+        // Attempt popup with explicit resolver (fixes COOP issues on some browsers)
+        const result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+        userEmail = result.user.email;
+      } catch (popupErr: any) {
+        // Popup blocked or COOP issue — fall back to redirect flow
+        if (
+          popupErr.code === 'auth/popup-blocked' ||
+          popupErr.code === 'auth/popup-closed-by-user' ||
+          popupErr.code === 'auth/cancelled-popup-request'
+        ) {
+          if (popupErr.code === 'auth/popup-closed-by-user') {
+            // User dismissed — not an error
+            setLoading(false);
+            return;
+          }
+          // Use redirect as fallback
+          await signInWithRedirect(auth, googleProvider);
+          return; // page will reload; getRedirectResult handles the rest
+        }
+        throw popupErr;
+      }
+
+      await handleAdminCheck(userEmail);
     } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError(null); // user dismissed — not an error
-      } else {
+      if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message || 'Google sign-in failed. Please try again.');
       }
     } finally {
