@@ -1,8 +1,8 @@
 /**
  * Centralized admin email configuration.
  *
- * PRIMARY ADMIN — must never be removed:
- *   yadavaanchal205@gmail.com
+ * PRIMARY ADMIN:
+ *   yadavaanchal2005@gmail.com
  *
  * To add more admins at runtime, use the AdminManagement page.
  * This file holds the hardcoded fallback list that is always active.
@@ -10,13 +10,11 @@
  * Emails are compared case-insensitively.
  */
 
-export const PRIMARY_ADMIN_EMAIL = 'yadavaanchal205@gmail.com';
+export const PRIMARY_ADMIN_EMAIL = 'yadavaanchal2005@gmail.com';
 
-// Base whitelist — always includes the primary admin.
-// Additional admins are stored in localStorage under 'extra_admin_emails'
-// and merged at runtime by getAdminEmails().
+// Base whitelist — always active regardless of localStorage.
 const BASE_ADMIN_EMAILS: string[] = [
-  PRIMARY_ADMIN_EMAIL,
+  'yadavaanchal2005@gmail.com',  // primary admin (with 2005)
 ];
 
 /**
@@ -53,7 +51,10 @@ export const addAdminEmail = (email: string): void => {
   try {
     const raw = localStorage.getItem('extra_admin_emails');
     const extras: string[] = raw ? JSON.parse(raw) : [];
-    if (!extras.includes(normalized) && !BASE_ADMIN_EMAILS.map(e => e.toLowerCase()).includes(normalized)) {
+    if (
+      !extras.includes(normalized) &&
+      !BASE_ADMIN_EMAILS.map(e => e.toLowerCase()).includes(normalized)
+    ) {
       extras.push(normalized);
       localStorage.setItem('extra_admin_emails', JSON.stringify(extras));
     }
