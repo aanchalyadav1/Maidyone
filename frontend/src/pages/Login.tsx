@@ -8,7 +8,7 @@ import {
   browserPopupRedirectResolver,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
-import { isAdminEmail } from '../config/adminWhitelist';
+import { isAdminEmail } from '../config/adminEmails';
 
 // NOTE: Login does NOT call navigate() after login.
 // App.tsx wraps <Login> with:
@@ -90,7 +90,7 @@ export const Login = () => {
       setLoading(true);
       setError(null);
 
-      let result;
+      let result: Awaited<ReturnType<typeof signInWithPopup>>;
       try {
         result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       } catch (popupErr: any) {

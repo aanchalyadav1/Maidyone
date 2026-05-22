@@ -18,7 +18,8 @@ import {
   Tag,
   AlertCircle,
   Image,
-  Kanban
+  Kanban,
+  Shield,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { SIDEBAR_ROUTES } from '../../config/routes';
@@ -38,6 +39,7 @@ const iconMap = {
   Tag,
   AlertCircle,
   Image,
+  Shield,
 } as const;
 
 export const Sidebar = () => {

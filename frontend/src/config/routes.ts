@@ -14,7 +14,8 @@ export type AppRouteKey =
   | 'services'
   | 'coupons'
   | 'complaints'
-  | 'banners';
+  | 'banners'
+  | 'admin-management';
 
 export type SidebarIconKey =
   | 'LayoutDashboard'
@@ -30,7 +31,8 @@ export type SidebarIconKey =
   | 'Wrench'
   | 'Tag'
   | 'AlertCircle'
-  | 'Image';
+  | 'Image'
+  | 'Shield';
 
 export interface AppRouteMeta {
   key: AppRouteKey;
@@ -58,6 +60,7 @@ export const APP_ROUTES: AppRouteMeta[] = [
   { key: 'coupons', path: '/coupons', title: 'Coupons', navLabel: 'Coupons', sidebarIcon: 'Tag', showInSidebar: true },
   { key: 'complaints', path: '/complaints', title: 'Complaints', navLabel: 'Complaints', sidebarIcon: 'AlertCircle', showInSidebar: true },
   { key: 'banners', path: '/banners', title: 'Banners', navLabel: 'Banners', sidebarIcon: 'Image', showInSidebar: true },
+  { key: 'admin-management', path: '/admin-management', title: 'Admin Management', navLabel: 'Admin Access', sidebarIcon: 'Shield', showInSidebar: true },
 ];
 
 export const SIDEBAR_ROUTES = APP_ROUTES.filter((route) => route.showInSidebar);

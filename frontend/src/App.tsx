@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './config/firebase';
-import { isAdminEmail } from './config/adminWhitelist';
+import { isAdminEmail } from './config/adminEmails';
 import { RootState } from './store';
 import { setSession, clearSession } from './features/auth/authSlice';
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -25,6 +25,7 @@ import { Verification }    from './pages/Verification';
 import { Coupons }         from './pages/Coupons';
 import { Complaints }      from './pages/Complaints';
 import { Banners }         from './pages/Banners';
+import { AdminManagement } from './pages/AdminManagement';
 import { APP_ROUTES, AppRouteKey } from './config/routes';
 
 // ─── Loading spinner ──────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ function App() {
     coupons:            <Coupons />,
     complaints:         <Complaints />,
     banners:            <Banners />,
+    'admin-management': <AdminManagement />,
   };
 
   return (
