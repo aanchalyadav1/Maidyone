@@ -1,118 +1,111 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import Booking from '../models/Booking';
 import Notification from '../models/Notification';
 import { sendResponse } from '../utils/responseHandler';
 
-// @desc    Get all bookings (with filters, search, pagination)
-// @route   GET /api/v1/bookings
+const ALLOWED_STATUSES = ['Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'] as const;
+
 export const getBookings = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status, service, date, search, page = '1', limit = '10' } = req.query;
-    
-    // Build query
-    const query: any = {};
-    if (status) query.status = status;
-    if (service) query.service = service;
-    
-    if (search) {
-      query.bookingId = { $regex: search as string, $options: 'i' };
-    }
 
+    const query: any = {};
+    if (status) {
+      if (!ALLOWED_STATUSES.includes(status as any)) {
+        return sendResponse(res, 400, false, `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
+      }
+      query.status = status;
+    }
+    if (service) {
+      if (!mongoose.Types.ObjectId.isValid(service as string)) {
+        return sendResponse(res, 400, false, 'Invalid service ID');
+      }
+      query.service = service;
+    }
+    if (search) query.bookingId = { $regex: String(search).trim(), $options: 'i' };
     if (date) {
       const startDate = new Date(date as string);
-      const endDate = new Date(date as string);
+      if (isNaN(startDate.getTime())) {
+        return sendResponse(res, 400, false, 'Invalid date format');
+      }
+      const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
       query.date = { $gte: startDate, $lt: endDate };
     }
 
-    // Pagination setup
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
-    const startIndex = (pageNum - 1) * limitNum;
+    const pageNum  = Math.max(1, parseInt(page as string, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 10));
 
-    // Execute query with populate
     const bookings = await Booking.find(query)
       .populate('user', 'name email phoneNumber avatar')
-      .populate({
-        path: 'worker',
-        select: 'user rating isOnline',
-        populate: { path: 'user', select: 'name email' }
-      })
+      .populate({ path: 'worker', select: 'user rating isOnline', populate: { path: 'user', select: 'name email' } })
       .populate('service', 'name category basePrice')
-      .skip(startIndex)
+      .skip((pageNum - 1) * limitNum)
       .limit(limitNum)
       .sort({ createdAt: -1 });
 
     const total = await Booking.countDocuments(query);
-
     sendResponse(res, 200, true, 'Bookings fetched successfully', {
       bookings,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum)
-      }
+      pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) }
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get single booking
-// @route   GET /api/v1/bookings/:id
 export const getBookingById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('user', 'name email phoneNumber address avatar')
-      .populate({
-        path: 'worker',
-        populate: { path: 'user', select: 'name email phoneNumber avatar' }
-      })
+      .populate({ path: 'worker', populate: { path: 'user', select: 'name email phoneNumber avatar' } })
       .populate('service', 'name category basePrice description');
 
-    if (!booking) {
-      return sendResponse(res, 404, false, 'Booking not found');
-    }
-
+    if (!booking) return sendResponse(res, 404, false, 'Booking not found');
     sendResponse(res, 200, true, 'Booking details fetched', booking);
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create new booking
-// @route   POST /api/v1/bookings
 export const createBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authUserId = (req as any).user?._id;
-    if (!authUserId) {
-      return sendResponse(res, 401, false, 'Not authorized, user context missing');
+    if (!authUserId) return sendResponse(res, 401, false, 'Not authorized');
+
+    const { service, address, totalAmount, notes } = req.body;
+
+    if (!service || !mongoose.Types.ObjectId.isValid(service)) {
+      return sendResponse(res, 400, false, 'Valid service ID is required');
+    }
+    if (!address || typeof address !== 'string' || !address.trim()) {
+      return sendResponse(res, 400, false, 'address is required');
+    }
+    if (totalAmount === undefined || isNaN(Number(totalAmount)) || Number(totalAmount) < 0) {
+      return sendResponse(res, 400, false, 'totalAmount must be a non-negative number');
     }
 
-    // Generate unique booking ID
     const bookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    // Ensure frontend doesn't override critical defaults:
-    const { status, date, user, ...allowedPayload } = req.body;
-    
     const newBooking = new Booking({
-      ...allowedPayload,
       bookingId,
-      date: new Date(), // Enforce Server-time
-      status: 'Pending', // Enforce default
-      user: authUserId
+      service,
+      address: address.trim(),
+      totalAmount: Number(totalAmount),
+      notes: notes ? String(notes).trim() : undefined,
+      date: new Date(),
+      status: 'Pending',
+      user: authUserId,
     });
 
     const savedBooking = await newBooking.save();
-    
-    // Auto-trigger notification
+
     await Notification.create({
       recipient: savedBooking.user,
       title: 'Booking Created',
       message: `Your booking ${savedBooking.bookingId} has been created and is pending confirmation.`,
       type: 'Booking',
-      relatedId: savedBooking.bookingId
+      relatedId: savedBooking.bookingId,
     });
 
     sendResponse(res, 201, true, 'Booking created successfully', savedBooking);
@@ -121,34 +114,24 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-// @desc    Update booking status
-// @route   PATCH /api/v1/bookings/:id/status
 export const updateBookingStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body;
-    
-    const allowedStatuses = ['Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
-    if (!allowedStatuses.includes(status)) {
-      return sendResponse(res, 400, false, 'Invalid status provided');
+    if (!status || !ALLOWED_STATUSES.includes(status)) {
+      return sendResponse(res, 400, false, `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
     }
 
     const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
+      req.params.id, { status }, { new: true, runValidators: true }
     );
+    if (!booking) return sendResponse(res, 404, false, 'Booking not found');
 
-    if (!booking) {
-      return sendResponse(res, 404, false, 'Booking not found');
-    }
-
-    // Auto-trigger notification
     await Notification.create({
       recipient: booking.user,
       title: `Booking ${status}`,
       message: `Your booking ${booking.bookingId} status has been updated to ${status}.`,
       type: 'Booking',
-      relatedId: booking.bookingId
+      relatedId: booking.bookingId,
     });
 
     sendResponse(res, 200, true, 'Booking status updated', booking);
@@ -157,14 +140,11 @@ export const updateBookingStatus = async (req: Request, res: Response, next: Nex
   }
 };
 
-// @desc    Assign worker to booking
-// @route   PATCH /api/v1/bookings/:id/assign-worker
 export const assignWorker = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { workerId } = req.body;
-    
-    if (!workerId) {
-      return sendResponse(res, 400, false, 'Worker ID is required');
+    if (!workerId || !mongoose.Types.ObjectId.isValid(workerId)) {
+      return sendResponse(res, 400, false, 'Valid worker ID is required');
     }
 
     const booking = await Booking.findByIdAndUpdate(
@@ -172,18 +152,14 @@ export const assignWorker = async (req: Request, res: Response, next: NextFuncti
       { worker: workerId, status: 'Confirmed' },
       { new: true }
     );
+    if (!booking) return sendResponse(res, 404, false, 'Booking not found');
 
-    if (!booking) {
-      return sendResponse(res, 404, false, 'Booking not found');
-    }
-
-    // Auto-trigger notification
     await Notification.create({
       recipient: booking.user,
-      title: `Worker Assigned`,
+      title: 'Worker Assigned',
       message: `A worker has been assigned to your booking ${booking.bookingId}. Status is now Confirmed.`,
       type: 'Booking',
-      relatedId: booking.bookingId
+      relatedId: booking.bookingId,
     });
 
     sendResponse(res, 200, true, 'Worker assigned successfully', booking);

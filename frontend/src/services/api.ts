@@ -58,10 +58,23 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      // Force logout on 401 Unauthorized
+    const status = error.response?.status;
+
+    if (status === 401) {
+      // Token expired or invalid — force logout and redirect
       store.dispatch(logout());
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
+
+    if (status === 403) {
+      // Forbidden — user lost admin role mid-session
+      store.dispatch(logout());
+      window.location.replace('/login');
+    }
+
     return Promise.reject(error);
   }
 );

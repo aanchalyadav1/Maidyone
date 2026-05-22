@@ -368,8 +368,8 @@ export const Banners = () => {
                       onClick={() => {
                         const url = resolveImageUrl(b.imageUrl);
                         if (url) window.open(url, '_blank', 'noopener,noreferrer');
-                        else alert('No banner image available');
                       }}
+                      disabled={!resolveImageUrl(b.imageUrl)}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Preview

@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
 import { RootState } from './store';
+import { logout } from './features/auth/authSlice';
 import { AdminLayout } from './components/layout/AdminLayout';
 
 import { Dashboard } from './pages/Dashboard';
@@ -22,20 +24,49 @@ import { Complaints } from './pages/Complaints';
 import { Banners } from './pages/Banners';
 import { APP_ROUTES, AppRouteKey } from './config/routes';
 
+// ─── Firebase token expiry check ─────────────────────────────────────────────
+// Firebase ID tokens expire after 1 hour. Parse the JWT exp claim and
+// pre-emptively log out before the backend rejects the next request.
+const getTokenExpiry = (token: string): number | null => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = useSelector((state: RootState) => state.auth.token);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const token   = useSelector((state: RootState) => state.auth.token);
+  const user    = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
+
+  // Check token expiry on every render of a protected route
+  useEffect(() => {
+    if (!token) return;
+    const expiry = getTokenExpiry(token);
+    if (expiry && Date.now() >= expiry) {
+      dispatch(logout());
+    }
+  }, [token, dispatch]);
+
   if (!token) return <Navigate to="/login" replace />;
+
+  // Role guard — only admins may access this panel
   if (user && user.role !== 'admin') {
-    // Non-admin users are not allowed in the admin panel
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white rounded-2xl shadow p-10 text-center max-w-sm">
           <h2 className="text-xl font-bold text-gray-800 mb-2">Access Denied</h2>
-          <p className="text-gray-500 text-sm mb-6">This panel is restricted to administrators only.</p>
+          <p className="text-gray-500 text-sm mb-6">
+            This panel is restricted to administrators only.
+          </p>
           <button
             className="bg-[#0EA5A4] text-white font-bold px-6 py-2.5 rounded-xl hover:bg-teal-700 transition"
-            onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
+            onClick={() => {
+              dispatch(logout());
+              window.location.replace('/login');
+            }}
           >
             Back to Login
           </button>
@@ -43,6 +74,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
+
   return <>{children}</>;
 };
 

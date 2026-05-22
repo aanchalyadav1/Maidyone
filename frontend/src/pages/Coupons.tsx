@@ -25,7 +25,6 @@ export const Coupons = () => {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
-  // Inline admin form to keep UI stable (no redesign)
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -35,6 +34,8 @@ export const Coupons = () => {
     usageLimit: '' as string,
     active: true
   });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const fetchCoupons = React.useCallback(async () => {
     try {
@@ -90,6 +91,7 @@ export const Coupons = () => {
               usageLimit: '',
               active: true
             });
+            setFormError(null);
             setFormOpen(true);
           }}
         >
@@ -108,7 +110,7 @@ export const Coupons = () => {
                 </p>
                 <p className="text-xs text-text-secondary">Manage coupon details</p>
               </div>
-              <Button variant="ghost" onClick={() => setFormOpen(false)}>
+              <Button variant="ghost" onClick={() => { setFormOpen(false); setFormError(null); }}>
                 Cancel
               </Button>
             </div>
@@ -161,28 +163,49 @@ export const Coupons = () => {
             </div>
 
             <div className="mt-5 flex items-center justify-end gap-3">
+              {formError && (
+                <p className="text-[12px] text-red-600 font-semibold mr-auto">{formError}</p>
+              )}
               <Button
+                disabled={saving}
                 onClick={async () => {
+                  if (!form.code.trim()) { setFormError('Code is required'); return; }
                   const discountValueNum = Number(form.discountValue);
-                  const usageLimitNum = form.usageLimit.trim() ? Number(form.usageLimit) : undefined;
-                  const payload = {
-                    code: form.code,
-                    discountType: form.discountType,
-                    discountValue: discountValueNum,
-                    usageLimit: usageLimitNum,
-                    status: form.active ? 'active' : 'inactive'
-                  };
-
-                  const action = editingId
-                    ? api.put(`/coupons/${editingId}`, payload)
-                    : api.post('/coupons', payload);
-
-                  await action;
-                  setFormOpen(false);
-                  fetchCoupons();
+                  if (isNaN(discountValueNum) || discountValueNum < 0) {
+                    setFormError('Discount value must be a non-negative number');
+                    return;
+                  }
+                  if (form.discountType === 'percent' && discountValueNum > 100) {
+                    setFormError('Percent discount cannot exceed 100');
+                    return;
+                  }
+                  try {
+                    setSaving(true);
+                    setFormError(null);
+                    const usageLimitNum = form.usageLimit.trim() ? Number(form.usageLimit) : undefined;
+                    const payload = {
+                      code: form.code,
+                      discountType: form.discountType,
+                      discountValue: discountValueNum,
+                      usageLimit: usageLimitNum,
+                      status: form.active ? 'active' : 'inactive'
+                    };
+                    if (editingId) {
+                      await api.put(`/coupons/${editingId}`, payload);
+                    } else {
+                      await api.post('/coupons', payload);
+                    }
+                    setFormOpen(false);
+                    setFormError(null);
+                    fetchCoupons();
+                  } catch (e: any) {
+                    setFormError(normalizeApiError(e, 'Failed to save coupon'));
+                  } finally {
+                    setSaving(false);
+                  }
                 }}
               >
-                {editingId ? 'Save changes' : 'Create'}
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create'}
               </Button>
             </div>
           </div>

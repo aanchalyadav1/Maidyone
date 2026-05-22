@@ -3,6 +3,10 @@ import User from '../models/User';
 import Booking from '../models/Booking';
 import Payment from '../models/Payment';
 import { sendResponse } from '../utils/responseHandler';
+import { isValidEmail } from '../middlewares/validate';
+
+const ALLOWED_ROLES   = ['admin', 'worker', 'user'] as const;
+const ALLOWED_STATUSES = ['active', 'inactive', 'suspended'] as const;
 
 // @desc    Get all users (with bookingsCount + totalSpend aggregation)
 // @route   GET /api/v1/users
@@ -98,53 +102,67 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
   try {
     const { name, email, phoneNumber, role, status, address, avatar } = req.body;
 
-    if (!name) return sendResponse(res, 400, false, 'Name is required');
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return sendResponse(res, 400, false, 'Name is required');
+    }
+    if (email && !isValidEmail(email)) {
+      return sendResponse(res, 400, false, 'Invalid email format');
+    }
+    if (role && !ALLOWED_ROLES.includes(role)) {
+      return sendResponse(res, 400, false, `Invalid role. Allowed: ${ALLOWED_ROLES.join(', ')}`);
+    }
+    if (status && !ALLOWED_STATUSES.includes(status)) {
+      return sendResponse(res, 400, false, `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
+    }
 
-    // Generate a placeholder firebaseUid for admin-created users
     const firebaseUid = `admin-created-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    const existing = email ? await User.findOne({ email }) : null;
-    if (existing) return sendResponse(res, 400, false, 'Email already in use');
+    const existing = email ? await User.findOne({ email: email.trim().toLowerCase() }) : null;
+    if (existing) return sendResponse(res, 409, false, 'Email already in use');
 
     const user = await User.create({
       firebaseUid,
-      name,
-      email: email || undefined,
-      phoneNumber: phoneNumber || undefined,
+      name: name.trim(),
+      email: email ? email.trim().toLowerCase() : undefined,
+      phoneNumber: phoneNumber ? String(phoneNumber).trim() : undefined,
       role: role || 'user',
       status: status || 'active',
-      address: address || undefined,
-      avatar: avatar || undefined,
+      address: address ? String(address).trim() : undefined,
+      avatar: avatar ? String(avatar).trim() : undefined,
     });
 
     const obj = user.toObject() as any;
     delete obj.firebaseUid;
-
     sendResponse(res, 201, true, 'User created successfully', obj);
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update user (name, email, phone, status, role, address, avatar)
+// @desc    Update user
 // @route   PATCH /api/v1/users/:id
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, phoneNumber, status, role, address, avatar } = req.body;
 
-    const allowedStatuses = ['active', 'inactive', 'suspended'];
-    if (status && !allowedStatuses.includes(status)) {
-      return sendResponse(res, 400, false, 'Invalid status value');
+    if (email && !isValidEmail(email)) {
+      return sendResponse(res, 400, false, 'Invalid email format');
+    }
+    if (status && !ALLOWED_STATUSES.includes(status)) {
+      return sendResponse(res, 400, false, `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
+    }
+    if (role && !ALLOWED_ROLES.includes(role)) {
+      return sendResponse(res, 400, false, `Invalid role. Allowed: ${ALLOWED_ROLES.join(', ')}`);
     }
 
     const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
-    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-    if (status !== undefined) updateData.status = status;
-    if (role !== undefined) updateData.role = role;
-    if (address !== undefined) updateData.address = address;
-    if (avatar !== undefined) updateData.avatar = avatar;
+    if (name !== undefined)        updateData.name        = String(name).trim();
+    if (email !== undefined)       updateData.email       = String(email).trim().toLowerCase();
+    if (phoneNumber !== undefined) updateData.phoneNumber = String(phoneNumber).trim();
+    if (status !== undefined)      updateData.status      = status;
+    if (role !== undefined)        updateData.role        = role;
+    if (address !== undefined)     updateData.address     = String(address).trim();
+    if (avatar !== undefined)      updateData.avatar      = String(avatar).trim();
 
     const user = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
@@ -152,7 +170,6 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     }).select('-firebaseUid');
 
     if (!user) return sendResponse(res, 404, false, 'User not found');
-
     sendResponse(res, 200, true, 'User updated successfully', user);
   } catch (error) {
     next(error);

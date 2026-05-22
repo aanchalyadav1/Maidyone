@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, CheckCircle2 } from 'lucide-react';
 import api, { extractApiData, normalizeApiError } from '../services/api';
 import { useDispatch, useSelector } from 'react-redux';
@@ -63,7 +63,7 @@ export const Settings = () => {
       const envelope: any = await api.patch('/settings/profile', payload);
       const data = extractApiData<any>(envelope, {});
 
-      // Update Redux store so Sidebar reflects new name/email
+      // Update Redux store — setCredentials already persists to localStorage
       if (authUser && token) {
         dispatch(setCredentials({
           user: {
@@ -72,12 +72,6 @@ export const Settings = () => {
             email: data.email || authUser.email,
           },
           token,
-        }));
-        // Persist to localStorage
-        localStorage.setItem('user', JSON.stringify({
-          ...authUser,
-          name: data.name || authUser.name,
-          email: data.email || authUser.email,
         }));
       }
 
