@@ -67,15 +67,10 @@ export const Complaints = () => {
   };
 
   useEffect(() => {
-    const t = setTimeout(() => fetchTickets(), 300);
+    const t = setTimeout(() => fetchTickets(), query ? 300 : 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
-  useEffect(() => {
-    fetchTickets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filtered = useMemo(() => tickets, [tickets]);
 

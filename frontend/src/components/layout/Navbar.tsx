@@ -16,10 +16,10 @@ export const Navbar = () => {
         .replace(/-/g, ' ')
         .replace(/\b\w/g, (m) => m.toUpperCase()));
 
-  // Extract subtitle based on current route
   const subTitle = currentPath === '/' ? 'Overview of the Maidyone!' :
     currentPath.includes('bookings') ? 'Overview of the Maidyone!' :
-      `Manage your ${currentPath.substring(1).split('/')[0]} here`;
+    currentPath.includes('admin-management') ? 'Manage admin access and permissions' :
+      `Manage your ${currentPath.substring(1).split('/')[0].replace(/-/g, ' ')} here`;
 
   return (
     <header className="min-w-0">

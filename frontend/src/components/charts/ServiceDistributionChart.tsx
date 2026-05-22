@@ -2,10 +2,18 @@ import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const ServiceDistributionChart = ({ data }: { data: any[] }) => {
-  // Vibrant colors exactly matching the screenshot's service wise booking donut
+  // Guard against undefined/null data
+  const safeData = Array.isArray(data) ? data : [];
   const COLORS = ['#0EA5A4', '#FFCA28', '#1A73E8', '#F26B4D', '#8E24AA', '#00BCD4', '#4CAF50', '#EC407A', '#9C27B0'];
+  const total = safeData.reduce((acc, curr) => acc + (Number(curr?.value) || 0), 0);
 
-  const total = data.reduce((acc, curr) => acc + curr.value, 0);
+  if (safeData.length === 0) {
+    return (
+      <div className="flex items-center justify-center w-full h-[180px] text-xs text-gray-400">
+        No service data yet
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative">
@@ -13,14 +21,14 @@ export const ServiceDistributionChart = ({ data }: { data: any[] }) => {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={safeData}
               innerRadius={60}
               outerRadius={80}
               paddingAngle={5}
               dataKey="value"
               stroke="none"
             >
-              {data.map((entry, index) => (
+              {safeData.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -33,15 +41,15 @@ export const ServiceDistributionChart = ({ data }: { data: any[] }) => {
       </div>
 
       <div className="flex flex-col w-full gap-2 mt-2">
-        {data.map((item, index) => (
+        {safeData.map((item, index) => (
           <div key={index} className="flex justify-between items-center text-[12px]">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-              <span className="text-text-primary text-[11px] font-bold">{item.name}</span>
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+              <span className="text-text-primary text-[11px] font-bold">{item?.name ?? '—'}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-bold">{total > 0 ? ((item.value / total) * 100).toFixed(0) : 0}%</span>
-              <span className="text-text-secondary text-[11px]">{item.value}</span>
+              <span className="font-bold">{total > 0 ? (((Number(item?.value) || 0) / total) * 100).toFixed(0) : 0}%</span>
+              <span className="text-text-secondary text-[11px]">{item?.value ?? 0}</span>
             </div>
           </div>
         ))}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Camera, CheckCircle2 } from 'lucide-react';
-import api, { extractApiData, normalizeApiError } from '../services/api';
+import api, { normalizeApiError } from '../services/api';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 

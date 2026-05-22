@@ -6,10 +6,20 @@ interface BookingTrendChartProps {
 }
 
 export const BookingTrendChart: React.FC<BookingTrendChartProps> = ({ data }) => {
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
+    return (
+      <div className="w-full h-[220px] flex items-center justify-center text-xs text-gray-400">
+        No booking trend data yet
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-[220px]">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={safeData}>
           <defs>
             <linearGradient id="colorBooking" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#1FA2A6" stopOpacity={0.1}/>
